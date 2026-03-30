@@ -247,7 +247,16 @@ const LocationView = () => {
             {/* Unique Inventory Summary Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col mb-4">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 p-6 border-b border-gray-50 bg-gray-50/30">
-          <div className="text-lg font-bold text-black">Warehouse Summary</div>
+          <div className="flex items-center gap-3">
+            <div className="text-lg font-bold text-black">Warehouse Summary</div>
+            <button
+              onClick={() => exportToCSV(filteredUniqueRows, 'warehouse_summary')}
+              className="flex gap-2 px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors whitespace-nowrap items-end"
+            >
+              <FileDown size={14} />
+              Export CSV
+            </button>
+          </div>
           <div className="flex gap-2 items-end">
             <div>
               <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">From</label>
