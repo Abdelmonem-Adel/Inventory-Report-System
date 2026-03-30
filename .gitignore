@@ -1,0 +1,35 @@
+# Node.js dependencies
+node_modules/
+
+# Build outputs
+/dist/
+/build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dotenv environment files
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VSCode settings
+.vscode/
+
+# Frontend specific (Vite, React, etc)
+inventory-dashboard/node_modules/
+inventory-dashboard/dist/
+inventory-dashboard/.env
+
+# Backend specific (Express, uploads, etc)
+Backend/node_modules/
+Backend/uploads/
+Backend/.env
+
+# Misc
+uploads/
