@@ -20,7 +20,7 @@ const LoginPage = ({ onLogin }) => {
       return;
     }
     try {
-      const res = await axios.post('/auth/login', { email, password });
+      const res = await axios.post('http://82.29.168.80:5000/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       onLogin(res.data.user);
