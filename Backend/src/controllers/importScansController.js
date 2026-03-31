@@ -13,24 +13,24 @@ export const importScansFile = async (req, res) => {
 
     const data = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-    const formattedData = data.map(row => ({
-      date: parseExcelDate(row.date),
-      productLocation: row.productLocation,
-      barcode: row.barcode,
-      id: row.id,
-      SKUname: row.SKUname,
-      productionDate: parseExcelDate(row.productionDate),
-      expirationDate: parseExcelDate(row.expirationDate),
-      finalQuantity: Number(row.finalQuantity),
-      sysQuantity: Number(row.sysQuantity),
-      userName: row.userName,
-      dateInput: parseExcelDate(row.dateInput),
-      category: row.category,
-      locationStatus: row.locationStatus,
-      productStatus: row.productStatus,
-      accuracy: row.accuracy,
-      variance: Number(row.variance)
-    }));
+      const formattedData = data.map(row => ({
+        date: parseExcelDate(row.date),
+        productLocation: row.productLocation,
+        barcode: String(row.barcode),
+        id: String(row.id),
+        SKUname: row.SKUname,
+        productionDate: parseExcelDate(row.productionDate),
+        expirationDate: parseExcelDate(row.expirationDate),
+        finalQuantity: Number(row.finalQuantity),
+        sysQuantity: Number(row.sysQuantity),
+        userName: row.userName,
+        dateInput: parseExcelDate(row.dateInput),
+        category: row.category,
+        locationStatus: row.locationStatus,
+        productStatus: row.productStatus,
+        accuracy: row.accuracy,
+        variance: Number(row.variance)
+      }));
 
     await Scans.insertMany(formattedData, { ordered: false });
 
