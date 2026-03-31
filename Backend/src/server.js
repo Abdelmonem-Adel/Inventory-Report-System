@@ -8,7 +8,10 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://inventory.breadfastwh.online',
+  credentials: true
+}));
 
 
 import importRoutes from "./routes/importRoutes.js";
