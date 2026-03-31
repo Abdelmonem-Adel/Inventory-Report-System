@@ -1,10 +1,13 @@
 import React, { useRef, useState } from "react";
 import * as XLSX from "xlsx";
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL + "/api") || '/api';
+
 // Helper functions for previewing files
 function previewExcel(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+
     reader.onload = (e) => {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: "array" });
@@ -51,7 +54,7 @@ export default function ImportPage() {
     const file = fileInputInventory.current.files[0];
     if (!file) return setLogInventory("Please select a file to import.");
     try {
-      const count = await importFile(file, "http://localhost:5000/api/import-inventory");
+      const count = await importFile(file, `${API_BASE_URL}/import-inventory`);
       setLogInventory(`Successfully imported ${count} inventory rows!`);
     } catch (e) {
       setLogInventory("Import error: " + e.message);
@@ -73,7 +76,7 @@ export default function ImportPage() {
     const file = fileInputScans.current.files[0];
     if (!file) return setLogScans("Please select a file to import.");
     try {
-      const count = await importFile(file, "http://localhost:5000/api/import-scans");
+      const count = await importFile(file, `${API_BASE_URL}/import-scans`);
       setLogScans(`Successfully imported ${count} scan rows!`);
     } catch (e) {
       setLogScans("Import error: " + e.message);
@@ -95,7 +98,7 @@ export default function ImportPage() {
     const file = fileInputUniqueInventory.current.files[0];
     if (!file) return setLogUniqueInventory("Please select a file to import.");
     try {
-      const count = await importFile(file, "http://localhost:5000/api/import-unique-inventory");
+      const count = await importFile(file, `${API_BASE_URL}/import-unique-inventory`);
       setLogUniqueInventory(`Successfully imported ${count} unique inventory rows!`);
     } catch (e) {
       setLogUniqueInventory("Import error: " + e.message);
