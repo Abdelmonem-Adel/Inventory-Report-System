@@ -697,7 +697,7 @@ const LocationView = () => {
 
         {/* Status Distribution & Top Items */}
         <div className="space-y-8">
-          <SectionCard title="Location Status Distribution" color="blue">
+          <SectionCard title="Location Status" color="blue">
             <LocationDonut data={metrics.locationStatus} />
           </SectionCard>
 
