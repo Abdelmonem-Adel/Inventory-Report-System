@@ -1,7 +1,7 @@
 import React from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-const CategoryStackedBar = ({ data }) => {
+const CategoryStackedBar = ({ data, visibleStatuses = ['Match', 'Gain', 'Loss'] }) => {
   return (
     <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -40,9 +40,15 @@ const CategoryStackedBar = ({ data }) => {
             iconType="circle"
             wrapperStyle={{ paddingBottom: '20px', fontSize: '12px', fontWeight: 600 }}
           />
-          <Bar dataKey="Match" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} barSize={40} />
-          <Bar dataKey="Gain" stackId="a" fill="#f59e0b" radius={[0, 0, 0, 0]} barSize={40} />
-          <Bar dataKey="Loss" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40} />
+          {visibleStatuses.includes('Match') && (
+            <Bar dataKey="Match" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} barSize={40} />
+          )}
+          {visibleStatuses.includes('Gain') && (
+            <Bar dataKey="Gain" stackId="a" fill="#f59e0b" radius={[0, 0, 0, 0]} barSize={40} />
+          )}
+          {visibleStatuses.includes('Loss') && (
+            <Bar dataKey="Loss" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={40} />
+          )}
         </BarChart>
       </ResponsiveContainer>
     </div>

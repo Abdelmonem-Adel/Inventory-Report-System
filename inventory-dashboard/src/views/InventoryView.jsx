@@ -43,6 +43,17 @@ const InventoryView = () => {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
+  const [chartStatuses, setChartStatuses] = useState(['Match', 'Gain', 'Loss'])
+
+  const toggleChartStatus = (status) => {
+    setChartStatuses(prev => {
+      if (prev.includes(status)) {
+        if (prev.length === 1) return prev // Don't allow deselecting all
+        return prev.filter(s => s !== status)
+      }
+      return [...prev, status]
+    })
+  }
 
   const { filtered, summary } = useMemo(() => {
     if (!inventoryData) return { filtered: [], summary: {} }
@@ -368,9 +379,39 @@ const InventoryView = () => {
           icon={<BarChart3 size={20} className="text-purple-500" />}
           color="purple"
         >
-          <CategoryStackedBar data={categoryData} />
+          {/* Chart Local Filters */}
+          <div className="flex flex-wrap gap-3 mb-6 justify-center">
+            {[
+              { id: 'Match', label: 'Match', color: 'green' },
+              { id: 'Gain', label: 'Gain', color: 'orange' },
+              { id: 'Loss', label: 'Loss', color: 'red' }
+            ].map(status => (
+              <button
+                key={status.id}
+                onClick={() => toggleChartStatus(status.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all flex items-center gap-2.5 ${
+                  chartStatuses.includes(status.id)
+                    ? status.color === 'green' ? 'bg-green-50 border-green-200 text-green-700' 
+                    : status.color === 'orange' ? 'bg-orange-50 border-orange-200 text-orange-700'
+                    : 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-white border-gray-100 text-gray-400 opacity-60 hover:opacity-100'
+                }`}
+              >
+                <div className={`w-3 h-3 rounded-full shadow-sm ${
+                  chartStatuses.includes(status.id)
+                    ? status.color === 'green' ? 'bg-green-500' 
+                    : status.color === 'orange' ? 'bg-orange-500'
+                    : 'bg-red-500'
+                    : 'bg-gray-200'
+                }`} />
+                {status.label}
+              </button>
+            ))}
+          </div>
+
+          <CategoryStackedBar data={categoryData} visibleStatuses={chartStatuses} />
           <p className="mt-4 text-[11px] text-muted italic text-center">
-            Showing status distribution for selected categories. Tooltip displays both item counts and total units.
+            Showing selected status distribution for categories. Tooltip displays both item counts and total units.
           </p>
         </SectionCard>
 

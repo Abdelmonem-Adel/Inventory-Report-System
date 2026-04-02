@@ -372,14 +372,25 @@ const LocationView = () => {
         }
 
         const dropdownScans = (scans || []).filter(scan => {
-          if (!activeScansFilters.search) return true
-          const s = activeScansFilters.search.toLowerCase()
-          const match = (scan.SKUname || '').toLowerCase().includes(s) ||
-                        (scan.barcode || '').toLowerCase().includes(s) ||
-                        (scan.id || '').toString().toLowerCase().includes(s) ||
-                        (scan.userName || '').toLowerCase().includes(s) ||
-                        (scan.productLocation || '').toLowerCase().includes(s)
-          return match
+          // Search filter
+          if (activeScansFilters.search) {
+            const s = activeScansFilters.search.toLowerCase()
+            const match = (scan.SKUname || '').toLowerCase().includes(s) ||
+                          (scan.barcode || '').toLowerCase().includes(s) ||
+                          (scan.id || '').toString().toLowerCase().includes(s) ||
+                          (scan.userName || '').toLowerCase().includes(s) ||
+                          (scan.productLocation || '').toLowerCase().includes(s)
+            if (!match) return false
+          }
+          
+          // Category filter
+          if (activeScansFilters.category && !activeScansFilters.category.includes('All Categories')) {
+            const itemCategories = (scan.category || '').split(',').map(c => c.trim())
+            const hasMatch = activeScansFilters.category.some(cat => itemCategories.includes(cat))
+            if (!hasMatch) return false
+          }
+
+          return true
         })
 
         const daysArr = Array.from(
@@ -666,7 +677,7 @@ const LocationView = () => {
         {/* Discrepancy Putaway */}
         <div className="lg:col-span-2">
           <SectionCard 
-            title="Discrepancy Locations Putaway" 
+            title="Zero system locations" 
             subtitle="System Qty = 0, Physical > 0"
             icon={<PackageCheck size={20} className="text-orange-500" />} 
             color="orange"
