@@ -8,8 +8,20 @@ connectDB();
 
 const app = express();
 
+const allowedOrigins = [
+  'https://inventory.breadfastwh.online',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
+
 app.use(cors({
-  origin: 'https://inventory.breadfastwh.online',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
