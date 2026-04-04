@@ -426,6 +426,13 @@ const LocationView = () => {
                 >
                   {isInventoryDaysDropdownOpen ? 'Hide' : 'Show'}
                 </button>
+                <button
+                  type="button"
+                  className="px-5 py-2 bg-gray-100 text-gray-600 rounded-lg border border-gray-200 font-bold text-base shadow-sm hover:bg-gray-200 transition-all ml-2"
+                  onClick={handleClearScansFilters}
+                >
+                  Clear
+                </button>
                 {isInventoryDaysDropdownOpen && (
                   <div className="absolute left-0 top-full mt-2 bg-white border border-blue-200 rounded-xl shadow-2xl z-10 p-4 min-w-[320px] max-h-80 overflow-y-auto flex flex-col gap-2">
                     {daysArr.length === 0 ? (
