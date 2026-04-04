@@ -24,40 +24,33 @@ const StaffProductivityChart = ({ data }) => {
   return (
     <div className="space-y-6">
       {/* Metric Toggles */}
-      <div className="flex flex-wrap gap-4 px-4 py-2 bg-gray-50/50 rounded-xl border border-gray-100">
-        <label className="flex items-center gap-2 cursor-pointer group">
-          <input 
-            type="checkbox" 
-            checked={activeMetrics.totalItems} 
-            onChange={() => toggleMetric('totalItems')}
-            className="w-4 h-4 rounded text-blue-500 border-gray-300 focus:ring-blue-500/20"
-          />
-          <span className={`text-xs font-bold transition-colors ${activeMetrics.totalItems ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`}>
-            Total Items
-          </span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer group">
-          <input 
-            type="checkbox" 
-            checked={activeMetrics.match} 
-            onChange={() => toggleMetric('match')}
-            className="w-4 h-4 rounded text-green-500 border-gray-300 focus:ring-green-500/20"
-          />
-          <span className={`text-xs font-bold transition-colors ${activeMetrics.match ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-600'}`}>
-            Match
-          </span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer group">
-          <input 
-            type="checkbox" 
-            checked={activeMetrics.humanError} 
-            onChange={() => toggleMetric('humanError')}
-            className="w-4 h-4 rounded text-red-500 border-gray-300 focus:ring-red-500/20"
-          />
-          <span className={`text-xs font-bold transition-colors ${activeMetrics.humanError ? 'text-red-600' : 'text-gray-400 group-hover:text-gray-600'}`}>
-            Human Error
-          </span>
-        </label>
+      <div className="flex flex-wrap gap-3 mb-6 justify-center">
+        {[
+          { id: 'totalItems', label: 'Total Items', color: 'blue' },
+          { id: 'match', label: 'Match', color: 'green' },
+          { id: 'humanError', label: 'Human Error', color: 'red' }
+        ].map(metric => (
+          <button
+            key={metric.id}
+            onClick={() => toggleMetric(metric.id)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold border-2 transition-all flex items-center gap-2.5 ${
+              activeMetrics[metric.id]
+                ? metric.color === 'blue' ? 'bg-blue-50 border-blue-200 text-blue-700'
+                : metric.color === 'green' ? 'bg-green-50 border-green-200 text-green-700'
+                : 'bg-red-50 border-red-200 text-red-700'
+                : 'bg-white border-gray-100 text-gray-400 opacity-60 hover:opacity-100'
+            }`}
+          >
+            <div className={`w-3 h-3 rounded-full shadow-sm ${
+              activeMetrics[metric.id]
+                ? metric.color === 'blue' ? 'bg-blue-500'
+                : metric.color === 'green' ? 'bg-green-500'
+                : 'bg-red-500'
+                : 'bg-gray-200'
+            }`} />
+            {metric.label}
+          </button>
+        ))}
       </div>
 
       {/* Chart */}
@@ -88,7 +81,7 @@ const StaffProductivityChart = ({ data }) => {
               }}
               itemStyle={{ fontSize: '12px', fontWeight: 600 }}
             />
-            <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
+            {/* <Legend verticalAlign="top" align="right" height={36} iconType="circle" /> */}
             
             {activeMetrics.totalItems && (
               <Bar

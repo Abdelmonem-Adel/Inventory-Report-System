@@ -34,12 +34,12 @@ const CategoryStackedBar = ({ data, visibleStatuses = ['Match', 'Gain', 'Loss'] 
               return [value, name]
             }}
           />
-          <Legend 
+          {/* <Legend 
             verticalAlign="top" 
             align="right" 
             iconType="circle"
             wrapperStyle={{ paddingBottom: '20px', fontSize: '12px', fontWeight: 600 }}
-          />
+          /> */}
           {visibleStatuses.includes('Match') && (
             <Bar dataKey="Match" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} barSize={40} />
           )}
