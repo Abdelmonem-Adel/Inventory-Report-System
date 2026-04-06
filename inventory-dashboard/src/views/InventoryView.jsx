@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useInventoryData, useScans } from '../api/hooks'
 import { computeInventoryMetrics, getLatestBySKU, getCategoryAnalysis } from '../utils/computeInventory'
-import { isNearExpiry } from '../utils/dateUtils'
+import { isNearExpiry, getExpiryStatus } from '../utils/dateUtils'
 import StatCard from '../components/ui/StatCard'
 import SectionCard from '../components/ui/SectionCard'
 import Badge from '../components/ui/Badge'
@@ -43,6 +43,7 @@ const InventoryView = () => {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
+  const [expiryDaysFilter, setExpiryDaysFilter] = useState(30)
   const [chartStatuses, setChartStatuses] = useState(['Match', 'Gain', 'Loss'])
 
   const toggleChartStatus = (status) => {
@@ -109,8 +110,13 @@ const InventoryView = () => {
       return true
     })
 
-    return filteredScans.filter(s => isNearExpiry(s.expirationDate, 30))
-  }, [rawScansData, activeFilters])
+    return filteredScans.filter(s => {
+      const status = getExpiryStatus(s.expirationDate)
+      if (expiryDaysFilter === 0) return status === 'expired'
+      if (expiryDaysFilter === 7) return status === 'expired' || status === 'critical'
+      return isNearExpiry(s.expirationDate, 30)
+    })
+  }, [rawScansData, activeFilters, expiryDaysFilter])
 
   const categories = useMemo(() => {
     if (!inventoryData) return []
@@ -421,7 +427,18 @@ const InventoryView = () => {
           icon={<AlertCircle size={20} className="text-red-500" />}
           color="red"
           headerActions={
-            <Badge variant="missing">{expiryData.length} Items</Badge>
+            <div className="flex items-center gap-3">
+              <select 
+                className="bg-red-50 border border-red-100 text-red-700 text-[10px] font-bold rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
+                value={expiryDaysFilter}
+                onChange={(e) => setExpiryDaysFilter(Number(e.target.value))}
+              >
+                <option value={30}>All (30 Days)</option>
+                <option value={7}>Next 7 Days</option>
+                <option value={0}>Expired Only</option>
+              </select>
+              <Badge variant="missing">{expiryData.length} Items</Badge>
+            </div>
           }
         >
           <ExpiryTable data={expiryData} />

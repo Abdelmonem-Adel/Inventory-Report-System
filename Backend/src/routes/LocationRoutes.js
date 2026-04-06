@@ -7,8 +7,10 @@ import {
     getTotleLocationMissMatch,
     getPersentageMatchLocation,
     getPersentageMissMatchLocation,
-    getDiscrepancyLocations
+    getDiscrepancyLocations,
+    toggleAlertVisibility
 } from '../controllers/LocationController.js';
+import { authMiddleware, roleMiddleware } from '../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -20,5 +22,6 @@ router.get('/locations/total-missmatch', getTotleLocationMissMatch);
 router.get('/locations/percentage-match', getPersentageMatchLocation);
 router.get('/locations/percentage-missmatch', getPersentageMissMatchLocation);
 router.get('/locations/discrepancies', getDiscrepancyLocations);
+router.patch('/locations/scans/:id/toggle-alert-visibility', authMiddleware, roleMiddleware('admin', 'top_admin'), toggleAlertVisibility);
 
 export default router;

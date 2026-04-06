@@ -131,3 +131,18 @@ export const getDiscrepancyLocations = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const toggleAlertVisibility = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const scan = await Scans.findById(id);
+        if (!scan) {
+            return res.status(404).json({ message: 'Scan not found' });
+        }
+        scan.hiddenFromAlerts = !scan.hiddenFromAlerts;
+        await scan.save();
+        res.json(scan);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};

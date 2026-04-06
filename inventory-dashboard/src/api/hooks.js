@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-import client from './client'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import client, { toggleAlertVisibility } from './client'
 
 export const useScans = () => {
   return useQuery({
@@ -8,7 +8,44 @@ export const useScans = () => {
       const { data } = await client.get('/locations/scans')
       return Array.isArray(data) ? data : (data.data || [])
     },
-    refetchInterval: 60000, // Auto-refresh every 60s as requested
+    refetchInterval: 60000,
+  })
+}
+
+export const useToggleAlertVisibility = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id) => toggleAlertVisibility(id),
+    // Optimistic Update
+    onMutate: async (id) => {
+      // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+      await queryClient.cancelQueries({ queryKey: ['scans'] })
+
+      // Snapshot the previous value
+      const previousScans = queryClient.getQueryData(['scans'])
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['scans'], (old) => {
+        if (!Array.isArray(old)) return old
+        return old.map(scan => 
+          (scan._id === id || scan.id === id) 
+            ? { ...scan, hiddenFromAlerts: !scan.hiddenFromAlerts } 
+            : scan
+        )
+      })
+
+      // Return a context object with the snapshotted value
+      return { previousScans }
+    },
+    // If the mutation fails, use the context returned from onMutate to roll back
+    onError: (err, id, context) => {
+      queryClient.setQueryData(['scans'], context.previousScans)
+    },
+    // Always refetch after error or success:
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['scans'] })
+    },
   })
 }
 

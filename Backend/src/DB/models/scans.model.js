@@ -50,6 +50,11 @@ const scansSchema = new mongoose.Schema({
     },
     category: {
         type: String
+    },
+    hiddenFromAlerts: {
+        type: Boolean,
+        default: false,
+        index: true
     }
 });
 
