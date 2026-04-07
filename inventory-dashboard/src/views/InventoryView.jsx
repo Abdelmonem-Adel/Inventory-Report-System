@@ -117,9 +117,10 @@ const InventoryView = () => {
     return filteredScans.filter(s => {
       const status = getExpiryStatus(s.expirationDate)
       let matchesDays = false
-      if (expiryDaysFilter === 0) matchesDays = status === 'expired'
-      else if (expiryDaysFilter === 7) matchesDays = status === 'expired' || status === 'critical'
-      else matchesDays = isNearExpiry(s.expirationDate, 30)
+      if (expiryDaysFilter === -1) matchesDays = ['expired', 'critical', 'warning'].includes(status)
+      else if (expiryDaysFilter === 0) matchesDays = status === 'expired'
+      else if (expiryDaysFilter === 7) matchesDays = status === 'critical'
+      else matchesDays = status === 'warning'
 
       if (!matchesDays) return false
 
@@ -445,9 +446,10 @@ const InventoryView = () => {
                   value={expiryDaysFilter}
                   onChange={(e) => setExpiryDaysFilter(Number(e.target.value))}
                 >
+                  <option value={-1}>Show All</option>
                   <option value={30}>30 Days</option>
                   <option value={7}>7 Days</option>
-                  <option value={0}>Expired</option>
+                  <option value={0}>Expired Only</option>
                 </select>
                 {isAdmin && (
                   <select 
