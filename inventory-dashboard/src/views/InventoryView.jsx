@@ -18,6 +18,9 @@ import { Search, Filter, X, ChevronDown, Calendar, AlertCircle, BarChart3, Packa
 import { isValid } from 'date-fns'
 
 const InventoryView = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  const isAdmin = ['admin', 'top_admin'].includes(user.role)
+
   const { data: rawInventoryData, isLoading: isInvLoading, isError: isInvError, error: invError, refetch: refetchInv } = useInventoryData()
   const { data: rawScansData, isLoading: isScansLoading, isError: isScansError, error: scansError, refetch: refetchScans } = useScans()
   
@@ -44,6 +47,7 @@ const InventoryView = () => {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
   const [expiryDaysFilter, setExpiryDaysFilter] = useState(30)
+  const [expiryVisibility, setExpiryVisibility] = useState('shown')
   const [chartStatuses, setChartStatuses] = useState(['Match', 'Gain', 'Loss'])
 
   const toggleChartStatus = (status) => {
@@ -112,11 +116,18 @@ const InventoryView = () => {
 
     return filteredScans.filter(s => {
       const status = getExpiryStatus(s.expirationDate)
-      if (expiryDaysFilter === 0) return status === 'expired'
-      if (expiryDaysFilter === 7) return status === 'expired' || status === 'critical'
-      return isNearExpiry(s.expirationDate, 30)
+      let matchesDays = false
+      if (expiryDaysFilter === 0) matchesDays = status === 'expired'
+      else if (expiryDaysFilter === 7) matchesDays = status === 'expired' || status === 'critical'
+      else matchesDays = isNearExpiry(s.expirationDate, 30)
+
+      if (!matchesDays) return false
+
+      if (expiryVisibility === 'shown') return !s.hiddenFromAlerts
+      if (expiryVisibility === 'hidden') return s.hiddenFromAlerts
+      return true
     })
-  }, [rawScansData, activeFilters, expiryDaysFilter])
+  }, [rawScansData, activeFilters, expiryDaysFilter, expiryVisibility])
 
   const categories = useMemo(() => {
     if (!inventoryData) return []
@@ -323,12 +334,12 @@ const InventoryView = () => {
           fullHeight={true}
           headerActions={
             <div className="flex items-center gap-3">
-              <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase whitespace-nowrap">
+              <span className="bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase whitespace-nowrap">
                 {latestData.length} Items
               </span>
               <button 
                 onClick={() => exportToCSV(latestData, 'inventory_report')}
-                className="flex items-center gap-2 px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 px-3 py-1.5 border border-blue-200 bg-white text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
               >
                 <FileDown size={14} />
                 Export CSV
@@ -367,9 +378,9 @@ const InventoryView = () => {
             >
               <div className="h-[500px] flex flex-col items-center justify-center text-center space-y-4 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
                 <div className="p-3 bg-white rounded-full shadow-sm">
-                  <Package size={24} className="text-gray-300" />
+                  <Package size={24} className="text-gray-400" />
                 </div>
-                <p className="text-gray-400 text-sm font-medium">Select a product from the table<br/>to view its inventory trend</p>
+                <p className="text-gray-500 text-sm font-medium">Select a product from the table<br/>to view its inventory trend</p>
               </div>
             </SectionCard>
           )}
@@ -428,15 +439,28 @@ const InventoryView = () => {
           color="red"
           headerActions={
             <div className="flex items-center gap-3">
-              <select 
-                className="bg-red-50 border border-red-100 text-red-700 text-[10px] font-bold rounded-lg px-2 py-1 focus:outline-none cursor-pointer"
-                value={expiryDaysFilter}
-                onChange={(e) => setExpiryDaysFilter(Number(e.target.value))}
-              >
-                <option value={30}>All (30 Days)</option>
-                <option value={7}>Next 7 Days</option>
-                <option value={0}>Expired Only</option>
-              </select>
+              <div className="flex items-center bg-red-50 border border-red-100 rounded-lg p-0.5">
+                <select 
+                  className={`bg-transparent text-red-600 text-[10px] font-bold px-2 py-1 focus:outline-none cursor-pointer ${isAdmin ? 'border-r border-red-100' : ''}`}
+                  value={expiryDaysFilter}
+                  onChange={(e) => setExpiryDaysFilter(Number(e.target.value))}
+                >
+                  <option value={30}>30 Days</option>
+                  <option value={7}>7 Days</option>
+                  <option value={0}>Expired</option>
+                </select>
+                {isAdmin && (
+                  <select 
+                    className="bg-transparent text-red-600 text-[10px] font-bold px-2 py-1 focus:outline-none cursor-pointer"
+                    value={expiryVisibility}
+                    onChange={(e) => setExpiryVisibility(e.target.value)}
+                  >
+                    <option value="shown">Shown Only</option>
+                    <option value="hidden">Hidden Only</option>
+                    <option value="all">Show All</option>
+                  </select>
+                )}
+              </div>
               <Badge variant="missing">{expiryData.length} Items</Badge>
             </div>
           }

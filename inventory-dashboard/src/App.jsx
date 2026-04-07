@@ -36,6 +36,7 @@ function ProtectedRoute({ children, roles }) {
 }
 
 const App = () => {
+
   return (
     <Router>
       <div className="min-h-screen pb-12">

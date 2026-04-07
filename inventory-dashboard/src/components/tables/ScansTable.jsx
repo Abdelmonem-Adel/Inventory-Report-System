@@ -20,7 +20,7 @@ const ScansTable = ({ data }) => {
       {
         header: 'Barcode',
         accessorKey: 'barcode',
-        cell: ({ getValue }) => <span className="text-[10px] font-medium text-muted">{getValue()}</span>
+        cell: ({ getValue }) => <span className="text-[10px] font-medium text-gray-400">{getValue()}</span>
       },
       {
         header: 'Item ID',
@@ -141,7 +141,7 @@ const ScansTable = ({ data }) => {
 
       {/* Pagination Controls */}
       <div className="flex items-center justify-between py-4">
-        <div className="text-xs text-muted font-bold uppercase tracking-wider">
+        <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">
           Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
         </div>
         <div className="flex items-center gap-2">

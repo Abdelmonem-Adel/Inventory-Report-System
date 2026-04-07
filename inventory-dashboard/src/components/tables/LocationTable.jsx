@@ -19,7 +19,7 @@ const LocationTable = ({ data, onViewDetails }) => {
       {
         header: 'Item ID',
         accessorKey: 'id',
-        cell: ({ getValue }) => <span className="text-xs font-semibold text-accent">{getValue()}</span>
+        cell: ({ getValue }) => <span className="text-xs font-semibold text-blue-600">{getValue()}</span>
       },
       {
         header: 'Match Locs',

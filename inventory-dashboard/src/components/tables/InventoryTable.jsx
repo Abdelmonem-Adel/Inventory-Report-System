@@ -26,14 +26,14 @@ const InventoryTable = ({ data, onViewHistory, selectedId, onSelect }) => {
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="font-bold text-gray-900">{row.original.SKUname}</span>
-            <span className="text-10px text-muted font-medium mt-0.5">{row.original.id}</span>
+            <span className="text-10px text-gray-400 font-medium mt-0.5">{row.original.id}</span>
           </div>
         )
       },
       {
         header: 'category',
         accessorKey: 'category',
-        cell: ({ getValue }) => <span className="text-xs text-gray-600 font-medium">{getValue() || 'N/A'}</span>
+        cell: ({ getValue }) => <span className="text-xs text-gray-400 font-medium">{getValue() || 'N/A'}</span>
       },
       {
         header: 'Product Status',
@@ -53,7 +53,7 @@ const InventoryTable = ({ data, onViewHistory, selectedId, onSelect }) => {
         cell: ({ row }) => (
           <button 
             onClick={() => onViewHistory(row.original)}
-            className="flex items-center gap-1.5 text-green-600 font-bold text-sm hover:text-green-700 transition-colors"
+            className="flex items-center gap-1.5 text-success font-bold text-sm hover:text-success/80 transition-colors"
           >
             <History size={16} />
             View History
@@ -104,9 +104,9 @@ const InventoryTable = ({ data, onViewHistory, selectedId, onSelect }) => {
                   key={row.id} 
                   onClick={() => onSelect && onSelect(row.original)}
                   className={`
-                    border-b border-gray-50 transition-all cursor-pointer
+                    border-b border-gray-100 transition-all cursor-pointer
                     ${isSelected 
-                      ? 'bg-blue-50/80 hover:bg-blue-100/80 border-l-4 border-l-blue-500 shadow-sm' 
+                      ? 'bg-blue-50 hover:bg-blue-100 border-l-4 border-l-blue-500 shadow-sm' 
                       : 'hover:bg-gray-50/50'}
                   `}
                 >
@@ -126,15 +126,15 @@ const InventoryTable = ({ data, onViewHistory, selectedId, onSelect }) => {
         <button
           onClick={() => setPage(p => Math.max(1, p - 1))}
           disabled={page === 1}
-          className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          className="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 disabled:opacity-50"
         >
           Previous
         </button>
-        <span className="mx-2 text-sm">Page {page} of {pageCount}</span>
+        <span className="mx-2 text-sm text-gray-500">Page {page} of {pageCount}</span>
         <button
           onClick={() => setPage(p => Math.min(pageCount, p + 1))}
           disabled={page === pageCount}
-          className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+          className="px-3 py-1 rounded bg-white border border-gray-200 text-gray-600 disabled:opacity-50"
         >
           Next
         </button>

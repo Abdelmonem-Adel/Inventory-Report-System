@@ -1,71 +1,129 @@
 import React from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { 
+  AreaChart, 
+  Area, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  ReferenceLine
+} from 'recharts'
 import { formatDate } from '../../utils/dateUtils'
 
 const ProductTrendLine = ({ data, productName }) => {
-  // Sort data by date
+  // Sort data by date and calculate variance
   const sortedData = [...data].sort((a, b) => {
     const da = new Date(a.dateInput || a.date)
     const db = new Date(b.dateInput || b.date)
     return da - db
   })
-    .map(d => ({
-      ...d,
-      formattedDate: formatDate(d.dateInput || d.date),
-      finalQty: Number(d.finalQuantity),
-      sysQty: Number(d.sysQuantity)
-    }))
+    .map(d => {
+      const finalQty = Number(d.finalQuantity) || 0
+      const sysQty = Number(d.sysQuantity) || 0
+      const variance = finalQty - sysQty
+      
+      return {
+        ...d,
+        formattedDate: formatDate(d.dateInput || d.date),
+        variance,
+        absVariance: Math.abs(variance)
+      }
+    })
 
   return (
     <div className="w-full">
-      <div className="h-[600px]">
+      <div className="h-[500px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
+          <AreaChart
             data={sortedData}
-            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            margin={{ top: 20, right: 30, left: 0, bottom: 0 }}
           >
+            <defs>
+              <linearGradient id="colorVar" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
             <XAxis 
               dataKey="formattedDate" 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: '#718096', fontSize: 11 }}
+              tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 500 }}
+              dy={10}
             />
             <YAxis 
               axisLine={false} 
               tickLine={false} 
-              tick={{ fill: '#718096', fontSize: 11 }}
+              tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 500 }}
+              dx={-10}
             />
             <Tooltip 
-              contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+              content={({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                  const val = payload[0].value
+                  const isPositive = val > 0
+                  const isNegative = val < 0
+                  return (
+                    <div className="bg-white p-4 shadow-xl rounded-2xl border border-gray-50 animate-in zoom-in-95 duration-200">
+                      <p className="text-[10px] uppercase font-black text-gray-400 tracking-widest mb-1">{label}</p>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-lg font-black ${isPositive ? 'text-green-600' : isNegative ? 'text-red-600' : 'text-blue-600'}`}>
+                          {isPositive ? `+${val}` : val}
+                        </span>
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Discrepancy</span>
+                      </div>
+                    </div>
+                  )
+                }
+                return null
+              }}
             />
-            <Legend 
-              verticalAlign="top" 
-              align="right" 
-              iconType="circle"
-              wrapperStyle={{ paddingBottom: '20px', fontSize: '12px', fontWeight: 600 }}
-            />
-            <Line 
+            <ReferenceLine y={0} stroke="#cbd5e1" strokeDasharray="3 3" />
+            <Area 
               type="monotone" 
-              dataKey="finalQty" 
-              name="Final QTY"
-              stroke="#22c55e" 
-              strokeWidth={3}
-              dot={{ r: 4, fill: '#22c55e', strokeWidth: 2, stroke: '#fff' }}
-              activeDot={{ r: 6 }}
+              dataKey="variance" 
+              name="Discrepancy"
+              stroke="#3b82f6" 
+              strokeWidth={4}
+              fillOpacity={1} 
+              fill="url(#colorVar)"
+              dot={(props) => {
+                const { cx, cy, payload } = props;
+                const val = payload.variance;
+                const fill = val > 0 ? '#22c55e' : val < 0 ? '#ef4444' : '#3b82f6';
+                return (
+                  <circle 
+                    key={`dot-${payload.formattedDate}`}
+                    cx={cx} 
+                    cy={cy} 
+                    r={5} 
+                    fill={fill} 
+                    stroke="#fff" 
+                    strokeWidth={2} 
+                    className="drop-shadow-sm transition-all hover:r-7"
+                  />
+                );
+              }}
+              activeDot={{ r: 7, strokeWidth: 0 }}
             />
-            <Line 
-              type="monotone" 
-              dataKey="sysQty" 
-              name="System Qty"
-              stroke="#94a3b8" 
-              strokeWidth={3}
-              strokeDasharray="5 5"
-              dot={{ r: 4, fill: '#94a3b8', strokeWidth: 2, stroke: '#fff' }}
-              activeDot={{ r: 6 }}
-            />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
+      </div>
+      <div className="mt-4 flex justify-center gap-6">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-green-500 shadow-sm"></div>
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gain</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm"></div>
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Loss</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></div>
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Match</span>
+        </div>
       </div>
     </div>
   )

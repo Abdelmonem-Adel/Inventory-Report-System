@@ -14,20 +14,8 @@ const ExpiryTable = ({ data }) => {
   const isAdmin = ['admin', 'top_admin'].includes(user.role)
   const mutation = useToggleAlertVisibility()
 
-  const handleToggleVisibility = (item) => {
-    // Try both _id (Mongo) and id (System)
-    const id = item._id || item.id;
-    if (!id) {
-      console.error('No valid ID found for scan:', item);
-      return;
-    }
-    mutation.mutate(id);
-  }
-
-  const filteredData = useMemo(() => {
-    if (isAdmin) return data;
-    return data.filter(item => !item.hiddenFromAlerts);
-  }, [data, isAdmin])
+  // Use data directly as filtering is now handled by the parent
+  const tableData = data;
 
   const columns = useMemo(
     () => {
@@ -36,8 +24,8 @@ const ExpiryTable = ({ data }) => {
           header: 'Product',
           accessorKey: 'SKUname',
           cell: ({ row }) => (
-            <div className={`flex flex-col ${row.original.hiddenFromAlerts ? 'opacity-50' : ''}`}>
-              <span className="font-bold text-gray-900">{row.original.SKUname}</span>
+            <div className={`flex flex-col ${row.original.hiddenFromAlerts ? 'opacity-40' : ''}`}>
+              <span className="font-bold text-primary">{row.original.SKUname}</span>
               <span className="text-10px text-muted font-medium mt-0.5">{row.original.id}</span>
             </div>
           )
@@ -46,7 +34,7 @@ const ExpiryTable = ({ data }) => {
           header: 'Location / Warehouse',
           accessorKey: 'productLocation',
           cell: ({ row, getValue }) => (
-            <span className={`text-xs font-semibold text-gray-600 ${row.original.hiddenFromAlerts ? 'opacity-50' : ''}`}>
+            <span className={`text-xs font-semibold text-muted ${row.original.hiddenFromAlerts ? 'opacity-40' : ''}`}>
               {getValue() || 'N/A'}
             </span>
           )
@@ -56,7 +44,7 @@ const ExpiryTable = ({ data }) => {
           id: 'inventoryDate',
           accessorFn: (row) => row.dateInput || row.date,
           cell: ({ row, getValue }) => (
-            <span className={`text-xs font-medium text-gray-500 ${row.original.hiddenFromAlerts ? 'opacity-50' : ''}`}>
+            <span className={`text-xs font-medium text-muted/80 ${row.original.hiddenFromAlerts ? 'opacity-40' : ''}`}>
               {formatDate(getValue())}
             </span>
           )
@@ -68,14 +56,14 @@ const ExpiryTable = ({ data }) => {
             const value = getValue()
             const status = getExpiryStatus(value)
             const colors = {
-              expired: 'text-red-600 font-bold',
-              critical: 'text-orange-600 font-bold',
-              warning: 'text-orange-500 font-bold',
-              safe: 'text-gray-900',
-              none: 'text-gray-400'
+              expired: 'text-danger font-bold',
+              critical: 'text-warning font-bold',
+              warning: 'text-warning/80 font-bold',
+              safe: 'text-primary',
+              none: 'text-muted'
             }
             return (
-              <span className={`text-xs ${colors[status]} ${row.original.hiddenFromAlerts ? 'opacity-50' : ''}`}>
+              <span className={`text-xs ${colors[status]} ${row.original.hiddenFromAlerts ? 'opacity-40' : ''}`}>
                 {formatDate(value)}
               </span>
             )
@@ -95,8 +83,8 @@ const ExpiryTable = ({ data }) => {
                 disabled={isToggling}
                 className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
                   row.original.hiddenFromAlerts
-                    ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                    : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-red-500'
+                    ? 'bg-accent/10 text-accent hover:bg-accent/20'
+                    : 'bg-page text-muted hover:bg-danger/10 hover:text-danger'
                 }`}
                 title={row.original.hiddenFromAlerts ? 'Show Alert' : 'Hide Alert'}
               >
@@ -124,14 +112,21 @@ const ExpiryTable = ({ data }) => {
     [isAdmin, mutation.isLoading, mutation.variables]
   )
 
+  // handleToggleVisibility for the actions column
+  const handleToggleVisibility = (item) => {
+    const id = item._id || item.id;
+    if (!id) return;
+    mutation.mutate(id);
+  }
+
   // Pagination state
   const [page, setPage] = useState(1);
   const pageSize = 20;
-  const pageCount = Math.ceil(filteredData.length / pageSize);
+  const pageCount = Math.ceil(tableData.length / pageSize);
   const paginatedData = useMemo(() => {
     const start = (page - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, page, pageSize]);
+    return tableData.slice(start, start + pageSize);
+  }, [tableData, page, pageSize]);
 
   const table = useReactTable({
     data: paginatedData,
@@ -145,13 +140,13 @@ const ExpiryTable = ({ data }) => {
 
   return (
     <>
-      <div className="overflow-y-auto max-h-[500px] custom-scrollbar border border-gray-100 rounded-xl">
+      <div className="overflow-y-auto max-h-[500px] custom-scrollbar border border-border rounded-xl">
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 z-10">
             {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id} className="bg-gray-50/90 backdrop-blur-sm">
+              <tr key={headerGroup.id} className="bg-page/90 backdrop-blur-sm">
                 {headerGroup.headers.map(header => (
-                  <th key={header.id} className="px-4 py-3 table-header border-b border-gray-100">
+                  <th key={header.id} className="px-4 py-3 table-header border-b border-border">
                     {flexRender(header.column.columnDef.header, header.getContext())}
                   </th>
                 ))}
@@ -160,7 +155,7 @@ const ExpiryTable = ({ data }) => {
           </thead>
           <tbody>
             {table.getRowModel().rows.map(row => (
-              <tr key={row.id} className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${row.original.hiddenFromAlerts ? 'bg-gray-50/30 italic' : ''}`}>
+              <tr key={row.id} className={`border-b border-border hover:bg-page/50 transition-colors animate-in fade-in duration-300 ${row.original.hiddenFromAlerts ? 'bg-page/30 grayscale-[0.5] opacity-80' : ''}`}>
                 {row.getVisibleCells().map(cell => (
                   <td key={cell.id} className="px-4 py-3 align-middle">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -168,10 +163,13 @@ const ExpiryTable = ({ data }) => {
                 ))}
               </tr>
             ))}
-            {filteredData.length === 0 && (
+            {tableData.length === 0 && (
               <tr>
-                <td colSpan={isAdmin ? 5 : 4} className="px-4 py-8 text-center text-muted italic">
-                  No critical expiry alerts found.
+                <td colSpan={isAdmin ? 5 : 4} className="px-4 py-12 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-2 text-muted italic">
+                    <BellOff size={32} className="opacity-20 mb-2" />
+                    <p>No critical expiry alerts found for the current filters.</p>
+                  </div>
                 </td>
               </tr>
             )}
@@ -184,15 +182,15 @@ const ExpiryTable = ({ data }) => {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+            className="px-3 py-1 rounded bg-page border border-border text-primary disabled:opacity-50"
           >
             Previous
           </button>
-          <span className="mx-2 text-sm">Page {page} of {pageCount}</span>
+          <span className="mx-2 text-sm text-muted">Page {page} of {pageCount}</span>
           <button
             onClick={() => setPage(p => Math.min(pageCount, p + 1))}
             disabled={page === pageCount}
-            className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
+            className="px-3 py-1 rounded bg-page border border-border text-primary disabled:opacity-50"
           >
             Next
           </button>

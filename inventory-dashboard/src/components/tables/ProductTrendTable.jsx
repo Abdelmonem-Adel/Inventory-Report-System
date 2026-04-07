@@ -14,7 +14,7 @@ const ProductTrendTable = ({ data, productName, sku, onClose }) => {
           <h3 className="text-xl font-extrabold text-gray-900 leading-tight">
             {productName}
           </h3>
-          <div className="text-xs font-bold text-muted flex items-center gap-2">
+          <div className="text-xs font-bold text-gray-400 flex items-center gap-2">
             <span>SKU: {sku}</span>
             <span className="w-1 h-1 rounded-full bg-gray-300"></span>
             <span>Total Records: {sortedData.length}</span>
@@ -35,10 +35,10 @@ const ProductTrendTable = ({ data, productName, sku, onClose }) => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50/80 backdrop-blur-sm border-b border-gray-100">
-              <th className="px-4 py-3 text-[10px] uppercase font-black text-muted tracking-widest w-1/3">Date</th>
-              <th className="px-4 py-3 text-[10px] uppercase font-black text-muted tracking-widest text-center">FinalQty</th>
-              <th className="px-4 py-3 text-[10px] uppercase font-black text-muted tracking-widest text-center">Sys Qty</th>
-              <th className="px-4 py-3 text-[10px] uppercase font-black text-muted tracking-widest text-right">Discrepancy</th>
+              <th className="px-4 py-3 text-[10px] uppercase font-black text-gray-400 tracking-widest w-1/3">Date</th>
+              <th className="px-4 py-3 text-[10px] uppercase font-black text-gray-400 tracking-widest text-center">FinalQty</th>
+              <th className="px-4 py-3 text-[10px] uppercase font-black text-gray-400 tracking-widest text-center">Sys Qty</th>
+              <th className="px-4 py-3 text-[10px] uppercase font-black text-gray-400 tracking-widest text-right">Discrepancy</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">

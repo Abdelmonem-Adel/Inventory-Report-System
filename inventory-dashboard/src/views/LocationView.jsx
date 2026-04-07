@@ -211,29 +211,29 @@ const LocationView = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-blue-500 p-4">
-            <div className="text-10px uppercase font-bold text-muted mb-3 tracking-widest">Product Status (In Locations)</div>
+            <div className="text-10px uppercase font-bold text-gray-400 mb-3 tracking-widest">Product Status (In Locations)</div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <div className="text-2xl font-extrabold text-green-600">{metrics.productStatus.match}</div>
-                <div className="text-[10px] font-bold text-muted uppercase">Match <Badge variant="gain" className="ml-1">{Math.round(metrics.productStatus.matchPercent)}%</Badge></div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase">Match <Badge variant="gain" className="ml-1">{Math.round(metrics.productStatus.matchPercent)}%</Badge></div>
               </div>
               <div className="space-y-1">
                 <div className="text-2xl font-extrabold text-red-600">{metrics.productStatus.mismatch}</div>
-                <div className="text-[10px] font-bold text-muted uppercase">Miss Match <Badge variant="missing" className="ml-1">{Math.round(metrics.productStatus.mismatchPercent)}%</Badge></div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase">Miss Match <Badge variant="missing" className="ml-1">{Math.round(metrics.productStatus.mismatchPercent)}%</Badge></div>
               </div>
             </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-blue-500 p-4">
-            <div className="text-10px uppercase font-bold text-muted mb-3 tracking-widest">Location Status (Per Scans)</div>
+            <div className="text-10px uppercase font-bold text-gray-400 mb-3 tracking-widest">Location Status (Per Scans)</div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <div className="text-2xl font-extrabold text-green-600">{metrics.locationStatus.match}</div>
-                <div className="text-[10px] font-bold text-muted uppercase">Match <Badge variant="gain" className="ml-1">{Math.round(metrics.locationStatus.matchPercent)}%</Badge></div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase">Match <Badge variant="gain" className="ml-1">{Math.round(metrics.locationStatus.matchPercent)}%</Badge></div>
               </div>
               <div className="space-y-1">
                 <div className="text-2xl font-extrabold text-orange-600">{metrics.locationStatus.mismatch}</div>
-                <div className="text-[10px] font-bold text-muted uppercase">Miss Match <Badge variant="extra" className="ml-1">{Math.round(metrics.locationStatus.mismatchPercent)}%</Badge></div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase">Miss Match <Badge variant="extra" className="ml-1">{Math.round(metrics.locationStatus.mismatchPercent)}%</Badge></div>
               </div>
             </div>
           </div>
@@ -246,7 +246,7 @@ const LocationView = () => {
 
             {/* Unique Inventory Summary Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col mb-4">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 p-6 border-b border-gray-50 bg-gray-50/30">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 p-6 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-3">
             <div className="text-lg font-bold text-black">Warehouse Summary</div>
             <button
@@ -260,14 +260,14 @@ const LocationView = () => {
           <div className="flex gap-2 items-end">
             <div>
               <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">From</label>
-              <input type="date" value={uniqueDateFrom} onChange={e => { setUniqueDateFrom(e.target.value); setUniquePage(1); }} className="border rounded-xl px-3 py-2 text-xs bg-white focus:outline-none focus:border-purple-300" />
+              <input type="date" value={uniqueDateFrom} onChange={e => { setUniqueDateFrom(e.target.value); setUniquePage(1); }} className="border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 text-gray-900 focus:outline-none focus:border-purple-300" />
             </div>
             <div>
               <label className="block text-[10px] uppercase font-bold text-gray-400 mb-1">To</label>
-              <input type="date" value={uniqueDateTo} onChange={e => { setUniqueDateTo(e.target.value); setUniquePage(1); }} className="border rounded-xl px-3 py-2 text-xs bg-white focus:outline-none focus:border-purple-300" />
+              <input type="date" value={uniqueDateTo} onChange={e => { setUniqueDateTo(e.target.value); setUniquePage(1); }} className="border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 text-gray-900 focus:outline-none focus:border-purple-300" />
             </div>
             {(uniqueDateFrom || uniqueDateTo) && (
-              <button onClick={() => { setUniqueDateFrom(''); setUniqueDateTo(''); setUniquePage(1); }} className="ml-2 px-3 py-2 text-xs bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-all">Clear</button>
+              <button onClick={() => { setUniqueDateFrom(''); setUniqueDateTo(''); setUniquePage(1); }} className="ml-2 px-3 py-2 text-xs bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 transition-all">Clear</button>
             )}
           </div>
         </div>
@@ -290,22 +290,22 @@ const LocationView = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {pagedUniqueRows.map((row, i) => (
-                  <tr key={row._id || i} className="hover:bg-purple-50 even:bg-gray-50 transition-colors">
+                  <tr key={row._id || i} className="hover:bg-purple-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 font-bold">{row.date ? new Date(row.date).toLocaleDateString() : ''}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{row.category || ''}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{row.matchedLocations ?? ''}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{row.missMatchedLocations ?? ''}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-purple-700 font-bold">{row.locationAccuracy != null ? `${Math.round(row.locationAccuracy * 100)}%` : ''}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{row.matchedItems ?? ''}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{row.missMatchedItems ?? ''}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-purple-700 font-bold">{row.itemsAccuracy != null ? `${Math.round(row.itemsAccuracy * 100)}%` : ''}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.category || ''}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.matchedLocations ?? ''}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.missMatchedLocations ?? ''}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-purple-500 font-bold">{row.locationAccuracy != null ? `${Math.round(row.locationAccuracy * 100)}%` : ''}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.matchedItems ?? ''}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{row.missMatchedItems ?? ''}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-purple-500 font-bold">{row.itemsAccuracy != null ? `${Math.round(row.itemsAccuracy * 100)}%` : ''}</td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot className="bg-gray-50 font-bold border-t-2 border-gray-200 sticky bottom-0 z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
+              <tfoot className="bg-white font-bold border-t-2 border-border sticky bottom-0 z-20 shadow-[0_-2px_10px_rgba(0,0,0,0.1)]">
                 {filteredUniqueRows.length > 0 && (
                   <tr>
-                    <td className="px-6 py-4 text-sm text-gray-900">TOTAL (Filtered)</td>
+                    <td className="px-6 py-4 text-sm text-black">TOTAL (Filtered)</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{/* Could show unique categories count here if desired */}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{filteredUniqueRows.reduce((a, b) => a + (b.matchedLocations || 0), 0)}</td>
                     <td className="px-6 py-4 text-sm text-gray-900">{filteredUniqueRows.reduce((a, b) => a + (b.missMatchedLocations || 0), 0)}</td>
@@ -413,11 +413,11 @@ const LocationView = () => {
         return (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-2">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-              <div className="text-sm font-bold text-blue-700">
-                Inventory Cycle Count <span className="text-lg text-blue-900">{daysArr.length}</span> days
+              <div className="text-sm font-bold text-blue-600">
+                Inventory Cycle Count <span className="text-lg text-black">{daysArr.length}</span> days
               </div>
-              <div className="text-xs text-gray-700 flex flex-wrap gap-2 items-center relative pr-32">
-                <span className="font-bold text-[18px]">Inventory Days :</span>
+              <div className="text-xs text-gray-400 flex flex-wrap gap-2 items-center relative pr-32">
+                <span className="font-bold text-[18px] text-black">Inventory Days :</span>
                 <button
                   type="button"
                   className="ml-4 px-5 py-2 bg-blue-600 text-white rounded-lg border border-blue-700 font-bold text-base shadow-md hover:bg-blue-700 transition-all"
@@ -558,13 +558,13 @@ const LocationView = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
           <div className="lg:col-span-2 space-y-1.5">
-            <label className="text-10px uppercase font-bold text-muted tracking-wider">Search Everywhere</label>
+            <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">Search Everywhere</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input 
                 type="text" 
                 placeholder="Name, Location, SKUID or Username..." 
-                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                 value={scansFilters.search}
                 onChange={(e) => setScansFilters({...scansFilters, search: e.target.value})}
               />
@@ -572,11 +572,11 @@ const LocationView = () => {
           </div>
 
           <div className="space-y-1.5 relative scans-category-dropdown">
-            <label className="text-10px uppercase font-bold text-muted tracking-wider">Category</label>
+            <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">Category</label>
             <button 
               type="button"
               onClick={() => setIsScansCategoryDropdownOpen(!isScansCategoryDropdownOpen)}
-              className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-left flex items-center justify-between"
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-left flex items-center justify-between"
             >
               <span className="truncate">
                 {scansFilters.category.includes('All Categories') 
@@ -587,7 +587,7 @@ const LocationView = () => {
             </button>
 
             {isScansCategoryDropdownOpen && (
-              <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-50 max-h-[300px] overflow-y-auto animate-in zoom-in-95 duration-200">
+              <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-[300px] overflow-y-auto animate-in zoom-in-95 duration-200">
                 <div className="p-2 space-y-1">
                   {scansCategories.map(cat => (
                     <label key={cat} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
@@ -609,19 +609,19 @@ const LocationView = () => {
 
           <div className="flex flex-col gap-2">
             <div className="space-y-1.5">
-              <label className="text-10px uppercase font-bold text-muted tracking-wider">From</label>
+              <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">From</label>
               <input 
                 type="date" 
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs focus:outline-none"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none"
                 value={scansFilters.dateFrom}
                 onChange={(e) => setScansFilters({...scansFilters, dateFrom: e.target.value})}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-10px uppercase font-bold text-muted tracking-wider">To</label>
+              <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">To</label>
               <input 
                 type="date" 
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-xs focus:outline-none"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none"
                 value={scansFilters.dateTo}
                 onChange={(e) => setScansFilters({...scansFilters, dateTo: e.target.value})}
               />
@@ -637,7 +637,7 @@ const LocationView = () => {
             </button>
             <button 
               onClick={handleClearScansFilters}
-              className="px-4 py-2 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-all"
+              className="px-4 py-2 bg-white border border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition-all"
             >
               Clear
             </button>
@@ -716,13 +716,13 @@ const LocationView = () => {
           >
             <div className="space-y-4">
               {topMissMatch.map((item, index) => (
-                <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group">
+                <div key={item.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group border border-gray-100">
                   <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm">
                     {index + 1}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold text-gray-900 truncate">{item.name}</div>
-                    <div className="text-10px text-muted font-bold truncate">{item.id}</div>
+                    <div className="text-10px text-gray-400 font-bold truncate">{item.id}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="blue" className="text-[10px] px-2">{item.missMatchLocs} Diff</Badge>
@@ -765,18 +765,18 @@ const LocationView = () => {
       >
         {selectedProduct && (
           <div className="space-y-6">
-            <div className="bg-accent-light border border-accent/20 rounded-2xl p-6 flex flex-wrap gap-8 items-center justify-between">
+          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex flex-wrap gap-8 items-center justify-between">
               <div className="space-y-1">
-                <div className="text-xs font-bold text-muted uppercase tracking-widest">Location Accuracy</div>
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Location Accuracy</div>
                 <div className="flex items-center gap-4">
-                  <div className="text-2xl font-black text-green-600">{selectedProduct.matchLocs} <span className="text-xs font-bold text-muted">MATCH</span></div>
+                  <div className="text-2xl font-black text-green-600">{selectedProduct.matchLocs} <span className="text-xs font-bold text-gray-400">MATCH</span></div>
                   <div className="h-6 w-px bg-gray-200"></div>
-                  <div className="text-2xl font-black text-red-600">{selectedProduct.missMatchLocs} <span className="text-xs font-bold text-muted">MISMATCH</span></div>
+                  <div className="text-2xl font-black text-red-600">{selectedProduct.missMatchLocs} <span className="text-xs font-bold text-gray-400">MISMATCH</span></div>
                 </div>
               </div>
               
               <div className="space-y-1 text-right">
-                <div className="text-xs font-bold text-muted uppercase tracking-widest">Quantity Totals</div>
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Quantity Totals</div>
                 <div className="flex items-center gap-4">
                   <div className="text-lg font-extrabold text-blue-600">Phy: {selectedProduct.totalFinalQty}</div>
                   <div className="text-lg font-extrabold text-gray-400">Sys: {selectedProduct.totalSysQty}</div>

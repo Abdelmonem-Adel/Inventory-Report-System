@@ -11,7 +11,7 @@ const StatCard = ({ label, value, color = 'blue', percentage, progress }) => {
 
   return (
     <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 ${borderColors[color] || borderColors.blue} p-4 flex flex-col justify-between h-full`}>
-      <div className="text-10px uppercase tracking-wider text-muted font-semibold mb-1">
+      <div className="text-10px uppercase tracking-wider text-gray-400 font-semibold mb-1">
         {label}
       </div>
       <div className="flex items-baseline justify-between">

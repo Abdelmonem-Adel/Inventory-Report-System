@@ -6,22 +6,6 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        page: 'var(--bg-page)',
-        card: 'var(--bg-card)',
-        primary: 'var(--text-primary)',
-        muted: 'var(--text-muted)',
-        label: 'var(--text-label)',
-        success: 'var(--green)',
-        'success-light': 'var(--green-light)',
-        warning: 'var(--orange)',
-        'warning-light': 'var(--orange-light)',
-        danger: 'var(--red)',
-        'danger-light': 'var(--red-light)',
-        accent: 'var(--blue)',
-        'accent-light': 'var(--blue-light)',
-        secondary: 'var(--purple)',
-      },
       borderRadius: {
         '2xl': '1rem',
       },

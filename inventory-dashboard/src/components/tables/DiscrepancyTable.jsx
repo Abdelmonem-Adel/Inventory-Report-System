@@ -15,7 +15,7 @@ const DiscrepancyTable = ({ data }) => {
         cell: ({ row }) => (
           <div className="flex flex-col">
             <span className="font-bold text-gray-900 line-clamp-1">{row.original.SKUname}</span>
-            <span className="text-[10px] text-muted font-medium">{row.original.id}</span>
+            <span className="text-[10px] text-gray-400 font-medium">{row.original.id}</span>
           </div>
         )
       },

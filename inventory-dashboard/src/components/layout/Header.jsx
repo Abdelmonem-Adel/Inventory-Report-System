@@ -13,9 +13,6 @@ const styles = `
     font-family: 'Poppins', sans-serif;
     transition: box-shadow 0.2s ease;
   }
-  .hdr-root.scrolled {
-    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
-  }
   .hdr-inner {
     max-width: 1280px;
     margin: 0 auto;
@@ -48,7 +45,7 @@ const styles = `
   .hdr-logo-name {
     font-size: 16px;
     font-weight: 800;
-    color: #0f172a;
+    color: #1a202c;
     letter-spacing: -0.5px;
     line-height: 1;
     padding-right: 30px;
@@ -57,7 +54,7 @@ const styles = `
     display: block;
     font-size: 9px;
     font-weight: 600;
-    color: #94a3b8;
+    color: #64748b;
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-top: 2px;
@@ -85,7 +82,7 @@ const styles = `
     white-space: nowrap;
     letter-spacing: 0.1px;
   }
-  .hdr-nav-link:hover { background: #f8fafc; color: #1e293b; }
+  .hdr-nav-link:hover { background: #f8fafc; color: #1a202c; }
   .hdr-nav-link.active { background: #eef2ff; color: #4f46e5; }
   .hdr-nav-dot {
     width: 5px; height: 5px;
@@ -135,7 +132,7 @@ const styles = `
   .hdr-username {
     font-size: 13px;
     font-weight: 700;
-    color: #1e293b;
+    color: #1a202c;
     letter-spacing: 0.1px;
   }
 
@@ -159,8 +156,8 @@ const styles = `
     align-items: center;
     gap: 6px;
     padding: 7px 14px;
-    background: #fff;
-    border: 1px solid #fecaca;
+    background: #ffffff;
+    border: 1px solid #fee2e2;
     border-radius: 8px;
     font-size: 12px;
     font-weight: 700;

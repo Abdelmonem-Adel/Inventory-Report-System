@@ -10,14 +10,14 @@ const SectionCard = ({ title, subtitle, icon, children, color = 'blue', headerAc
 
   return (
     <div className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col ${fullHeight ? 'h-full' : ''}`}>
-      <div className={`border-l-4 ${borderColors[color] || borderColors.blue} p-4 flex items-center justify-between border-b border-gray-50`}>
+      <div className={`border-l-4 ${borderColors[color] || borderColors.blue} p-4 flex items-center justify-between border-b border-gray-100`}>
         <div className="flex items-center gap-3">
           {icon && <div className="text-gray-400">{icon}</div>}
           <div>
             <h3 className="text-18px font-bold text-gray-900 leading-tight flex items-center gap-2">
               {title}
             </h3>
-            {subtitle && <p className="text-xs text-muted mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
           </div>
         </div>
         {headerActions && <div>{headerActions}</div>}
