@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { useInventoryData, useScans } from '../api/hooks'
 import { computeInventoryMetrics, getLatestBySKU, getCategoryAnalysis } from '../utils/computeInventory'
-import { isNearExpiry, getExpiryStatus } from '../utils/dateUtils'
+import { formatDate, isNearExpiry, getExpiryStatus } from '../utils/dateUtils'
 import StatCard from '../components/ui/StatCard'
 import SectionCard from '../components/ui/SectionCard'
 import Badge from '../components/ui/Badge'
@@ -461,6 +461,22 @@ const InventoryView = () => {
                   </select>
                 )}
               </div>
+              <button 
+                onClick={() => {
+                  const mappedData = expiryData.map(item => ({
+                    'Product': item.SKUname,
+                    'Location / Warehouse': item.productLocation || 'N/A',
+                    'Inventory Date': formatDate(item.dateInput || item.date),
+                    'Expiry Date': formatDate(item.expirationDate),
+                    'Visibility': item.hiddenFromAlerts ? 'Hidden' : 'Shown'
+                  }))
+                  exportToCSV(mappedData, 'critical_expiry_report')
+                }}
+                className="flex items-center gap-2 px-3 py-1.5 border border-blue-200 bg-white text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
+              >
+                <FileDown size={14} />
+                Export
+              </button>
               <Badge variant="missing">{expiryData.length} Items</Badge>
             </div>
           }
