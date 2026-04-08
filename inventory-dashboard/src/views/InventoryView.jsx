@@ -14,8 +14,9 @@ import Spinner from '../components/ui/Spinner'
 import ErrorState from '../components/ui/ErrorState'
 import Modal from '../components/ui/Modal'
 import { exportToCSV } from '../utils/csvExport'
-import { Search, Filter, X, ChevronDown, Calendar, AlertCircle, BarChart3, Package, FileDown } from 'lucide-react'
+import { Search, Filter, X, ChevronDown, Calendar, AlertCircle, BarChart3, Package, FileDown, Eye, EyeOff } from 'lucide-react'
 import { isValid } from 'date-fns'
+import { useBulkToggleAlertVisibility } from '../api/hooks'
 
 const InventoryView = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -49,6 +50,10 @@ const InventoryView = () => {
   const [expiryDaysFilter, setExpiryDaysFilter] = useState(30)
   const [expiryVisibility, setExpiryVisibility] = useState('shown')
   const [chartStatuses, setChartStatuses] = useState(['Match', 'Gain', 'Loss'])
+  const [expiryInventoryDateFrom, setExpiryInventoryDateFrom] = useState('')
+  const [expiryInventoryDateTo, setExpiryInventoryDateTo] = useState('')
+  
+  const bulkHideMutation = useBulkToggleAlertVisibility()
 
   const toggleChartStatus = (status) => {
     setChartStatuses(prev => {
@@ -110,6 +115,16 @@ const InventoryView = () => {
         dateTo.setHours(23, 59, 59, 999)
         if (scanDate > dateTo) return false
       }
+
+      // Expiry Specific Inventory Date Filter
+      if (expiryInventoryDateFrom && isValid(scanDate)) {
+        if (scanDate < new Date(expiryInventoryDateFrom)) return false
+      }
+      if (expiryInventoryDateTo && isValid(scanDate)) {
+        const dateTo = new Date(expiryInventoryDateTo)
+        dateTo.setHours(23, 59, 59, 999)
+        if (scanDate > dateTo) return false
+      }
       
       return true
     })
@@ -128,7 +143,7 @@ const InventoryView = () => {
       if (expiryVisibility === 'hidden') return s.hiddenFromAlerts
       return true
     })
-  }, [rawScansData, activeFilters, expiryDaysFilter, expiryVisibility])
+  }, [rawScansData, activeFilters, expiryDaysFilter, expiryVisibility, expiryInventoryDateFrom, expiryInventoryDateTo])
 
   const categories = useMemo(() => {
     if (!inventoryData) return []
@@ -483,6 +498,85 @@ const InventoryView = () => {
             </div>
           }
         >
+          {isAdmin && (
+            <div className="p-4 bg-red-50/30 border-b border-red-100/50 mb-4 rounded-t-xl overflow-x-auto">
+              <div className="flex flex-wrap items-end gap-4">
+                <div className="flex-1 min-w-[200px]">
+                  <label className="text-[10px] uppercase font-bold text-red-400 mb-1.5 block tracking-wider">Inventory Date Filter</label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-red-300" size={14} />
+                      <input 
+                        type="date" 
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-red-100 rounded-lg text-xs focus:ring-2 focus:ring-red-500/20 focus:border-red-400 outline-none transition-all"
+                        value={expiryInventoryDateFrom}
+                        onChange={(e) => setExpiryInventoryDateFrom(e.target.value)}
+                      />
+                    </div>
+                    <span className="text-red-300 text-xs font-bold">to</span>
+                    <div className="relative flex-1">
+                      <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 text-red-300" size={14} />
+                      <input 
+                        type="date" 
+                        className="w-full pl-9 pr-3 py-2 bg-white border border-red-100 rounded-lg text-xs focus:ring-2 focus:ring-red-500/20 focus:border-red-400 outline-none transition-all"
+                        value={expiryInventoryDateTo}
+                        onChange={(e) => setExpiryInventoryDateTo(e.target.value)}
+                      />
+                    </div>
+                    {(expiryInventoryDateFrom || expiryInventoryDateTo) && (
+                      <button 
+                        onClick={() => { setExpiryInventoryDateFrom(''); setExpiryInventoryDateTo(''); }}
+                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-lg transition-all"
+                        title="Clear Dates"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex gap-2">
+                  <button
+                    disabled={expiryData.length === 0 || bulkHideMutation.isLoading}
+                    onClick={() => {
+                      if (window.confirm(`Are you sure you want to hide all ${expiryData.length} visible items?`)) {
+                        const ids = expiryData.map(item => item._id || item.id);
+                        bulkHideMutation.mutate({ ids, hidden: true });
+                      }
+                    }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                      expiryData.length === 0 
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                        : 'bg-red-500 text-white hover:bg-red-600 active:scale-95 shadow-red-200'
+                    }`}
+                  >
+                    {bulkHideMutation.isLoading ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <EyeOff size={14} />
+                    )}
+                    Hide All Visible
+                  </button>
+                  
+                  {expiryVisibility === 'hidden' && (
+                    <button
+                      disabled={expiryData.length === 0 || bulkHideMutation.isLoading}
+                      onClick={() => {
+                        if (window.confirm(`Are you sure you want to show all ${expiryData.length} hidden items?`)) {
+                          const ids = expiryData.map(item => item._id || item.id);
+                          bulkHideMutation.mutate({ ids, hidden: false });
+                        }
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-xs font-bold hover:bg-green-600 active:scale-95 transition-all shadow-sm shadow-green-200"
+                    >
+                      <Eye size={14} />
+                      Show All Hidden
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <ExpiryTable data={expiryData} />
         </SectionCard>
       </div>

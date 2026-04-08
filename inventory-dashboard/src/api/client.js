@@ -24,5 +24,6 @@ client.interceptors.request.use(
 );
 
 export const toggleAlertVisibility = (id) => client.patch(`/locations/scans/${id}/toggle-alert-visibility`)
+export const bulkToggleAlertVisibility = (ids, hidden) => client.patch('/locations/scans/bulk-toggle-alert-visibility', { ids, hidden })
 
 export default client

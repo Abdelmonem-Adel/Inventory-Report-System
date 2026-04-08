@@ -8,7 +8,8 @@ import {
     getPersentageMatchLocation,
     getPersentageMissMatchLocation,
     getDiscrepancyLocations,
-    toggleAlertVisibility
+    toggleAlertVisibility,
+    bulkToggleAlertVisibility
 } from '../controllers/LocationController.js';
 import { authMiddleware, roleMiddleware } from '../middlewares/auth.js';
 
@@ -23,5 +24,6 @@ router.get('/locations/percentage-match', getPersentageMatchLocation);
 router.get('/locations/percentage-missmatch', getPersentageMissMatchLocation);
 router.get('/locations/discrepancies', getDiscrepancyLocations);
 router.patch('/locations/scans/:id/toggle-alert-visibility', authMiddleware, roleMiddleware('admin', 'top_admin'), toggleAlertVisibility);
+router.patch('/locations/scans/bulk-toggle-alert-visibility', authMiddleware, roleMiddleware('admin', 'top_admin'), bulkToggleAlertVisibility);
 
 export default router;

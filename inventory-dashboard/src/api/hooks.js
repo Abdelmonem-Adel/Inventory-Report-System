@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import client, { toggleAlertVisibility } from './client'
+import client, { toggleAlertVisibility, bulkToggleAlertVisibility } from './client'
 
 export const useScans = () => {
   return useQuery({
@@ -43,6 +43,36 @@ export const useToggleAlertVisibility = () => {
       queryClient.setQueryData(['scans'], context.previousScans)
     },
     // Always refetch after error or success:
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['scans'] })
+    },
+  })
+}
+
+export const useBulkToggleAlertVisibility = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ ids, hidden }) => bulkToggleAlertVisibility(ids, hidden),
+    // Optimistic Update
+    onMutate: async ({ ids, hidden }) => {
+      await queryClient.cancelQueries({ queryKey: ['scans'] })
+      const previousScans = queryClient.getQueryData(['scans'])
+
+      queryClient.setQueryData(['scans'], (old) => {
+        if (!Array.isArray(old)) return old
+        return old.map(scan => 
+          ids.includes(scan._id) || ids.includes(scan.id)
+            ? { ...scan, hiddenFromAlerts: hidden } 
+            : scan
+        )
+      })
+
+      return { previousScans }
+    },
+    onError: (err, variables, context) => {
+      queryClient.setQueryData(['scans'], context.previousScans)
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['scans'] })
     },

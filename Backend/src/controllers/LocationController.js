@@ -146,3 +146,19 @@ export const toggleAlertVisibility = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const bulkToggleAlertVisibility = async (req, res) => {
+    try {
+        const { ids, hidden } = req.body;
+        if (!Array.isArray(ids)) {
+            return res.status(400).json({ message: 'IDs must be an array' });
+        }
+        await Scans.updateMany(
+            { _id: { $in: ids } },
+            { $set: { hiddenFromAlerts: hidden } }
+        );
+        res.json({ message: 'Scans updated successfully', count: ids.length });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
