@@ -354,7 +354,18 @@ const InventoryView = () => {
                 {latestData.length} Items
               </span>
               <button 
-                onClick={() => exportToCSV(latestData, 'inventory_report')}
+                onClick={() => {
+                  const mappedData = filtered.map(item => ({
+                    'Product Name': item.SKUname,
+                    'SKU Code': item.id,
+                    'Category': item.category || 'N/A',
+                    'Inventory Date': formatDate(item.dateInput || item.date),
+                    'Status': item.productStatus,
+                    'Counted Quantity': item.finalQuantity,
+                    'Variance': item.variance
+                  }))
+                  exportToCSV(mappedData, 'inventory_report')
+                }}
                 className="flex items-center gap-2 px-3 py-1.5 border border-blue-200 bg-white text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
               >
                 <FileDown size={14} />
