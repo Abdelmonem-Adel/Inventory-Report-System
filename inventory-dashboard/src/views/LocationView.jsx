@@ -15,6 +15,7 @@ import { exportToExcel } from '../utils/excelExport'
 import { exportToCSV } from '../utils/csvExport'
 import { parseISO, isValid } from 'date-fns'
 import ScansTable from '../components/tables/ScansTable'
+import { CATEGORIES_L1, getCategoryForSub, CATEGORIES_BY_MAIN } from '../constants/categoryMapping'
 
 const LocationView = () => {
   const { data: scans, isLoading, isError, error, refetch } = useScans()
@@ -50,14 +51,16 @@ const LocationView = () => {
   // Scans Detail Table Filters
   const [scansFilters, setScansFilters] = useState({
     search: '',
-    category: ['All Categories'],
+    categoryL1: ['All Categories'],
+    categoryL2: ['All Categories'],
     daysFilterMode: 'range', // 'range' uses dateFrom/dateTo, 'days' uses selectedDays
     selectedDays: [],
     dateFrom: '',
     dateTo: ''
   })
   const [activeScansFilters, setActiveScansFilters] = useState(scansFilters)
-  const [isScansCategoryDropdownOpen, setIsScansCategoryDropdownOpen] = useState(false)
+  const [isScansCategoryL1DropdownOpen, setIsScansCategoryL1DropdownOpen] = useState(false)
+  const [isScansCategoryL2DropdownOpen, setIsScansCategoryL2DropdownOpen] = useState(false)
   const [isInventoryDaysDropdownOpen, setIsInventoryDaysDropdownOpen] = useState(false)
 
   const filteredScans = useMemo(() => {
@@ -73,9 +76,18 @@ const LocationView = () => {
         if (!match) return false
       }
       
-      if (activeScansFilters.category && !activeScansFilters.category.includes('All Categories')) {
-        const itemCategories = (scan.category || '').split(',').map(c => c.trim())
-        const hasMatch = activeScansFilters.category.some(cat => itemCategories.includes(cat))
+      // Category L1 filter
+      if (activeScansFilters.categoryL1 && !activeScansFilters.categoryL1.includes('All Categories')) {
+        const itemSubCategories = (scan.category || '').split(',').map(c => c.trim())
+        const itemL1Categories = [...new Set(itemSubCategories.map(sub => getCategoryForSub(sub)))]
+        const hasMatch = activeScansFilters.categoryL1.some(cat => itemL1Categories.includes(cat))
+        if (!hasMatch) return false
+      }
+      
+      // Category L2 filter
+      if (activeScansFilters.categoryL2 && !activeScansFilters.categoryL2.includes('All Categories')) {
+        const itemSubCategories = (scan.category || '').split(',').map(c => c.trim())
+        const hasMatch = activeScansFilters.categoryL2.some(cat => itemSubCategories.includes(cat))
         if (!hasMatch) return false
       }
       
@@ -123,25 +135,34 @@ const LocationView = () => {
     return getDiscrepancyPutaway(filteredScans)
   }, [filteredScans])
 
-  const scansCategories = useMemo(() => {
+  const scansSubCategories = useMemo(() => {
     if (!scans) return []
-    const allCats = scans.flatMap(s => (s.category || '').split(',').map(c => c.trim()))
-    return ['All Categories', ...new Set(allCats)].filter(Boolean)
-  }, [scans])
+    const allSubs = scans.flatMap(s => (s.category || '').split(',').map(c => c.trim()))
+    const uniqueSubs = [...new Set(allSubs)].filter(Boolean).sort()
+    
+    // Filter subs based on selected L1 categories
+    if (scansFilters.categoryL1 && !scansFilters.categoryL1.includes('All Categories')) {
+      return uniqueSubs.filter(sub => scansFilters.categoryL1.includes(getCategoryForSub(sub)))
+    }
+    
+    return uniqueSubs
+  }, [scans, scansFilters.categoryL1])
 
   const handleApplyScansFilters = () => {
     setActiveScansFilters(scansFilters)
-    setIsScansCategoryDropdownOpen(false)
+    setIsScansCategoryL1DropdownOpen(false)
+    setIsScansCategoryL2DropdownOpen(false)
   }
   const handleClearScansFilters = () => {
-    const cleared = { search: '', category: ['All Categories'], daysFilterMode: 'range', selectedDays: [], dateFrom: '', dateTo: '' }
+    const cleared = { search: '', categoryL1: ['All Categories'], categoryL2: ['All Categories'], daysFilterMode: 'range', selectedDays: [], dateFrom: '', dateTo: '' }
     setScansFilters(cleared)
     setActiveScansFilters(cleared)
-    setIsScansCategoryDropdownOpen(false)
+    setIsScansCategoryL1DropdownOpen(false)
+    setIsScansCategoryL2DropdownOpen(false)
   }
 
-  const toggleScansCategory = (cat) => {
-    let newCats = [...scansFilters.category]
+  const toggleScansCategoryL1 = (cat) => {
+    let newCats = [...scansFilters.categoryL1]
     if (cat === 'All Categories') {
       newCats = ['All Categories']
     } else {
@@ -153,19 +174,57 @@ const LocationView = () => {
         newCats.push(cat)
       }
     }
-    setScansFilters({ ...scansFilters, category: newCats })
+    setScansFilters({ ...scansFilters, categoryL1: newCats })
+  }
+
+  const toggleScansMainCategory = (mainCat) => {
+    const categoriesInMain = CATEGORIES_BY_MAIN[mainCat] || []
+    const allSelected = categoriesInMain.every(cat => scansFilters.categoryL1.includes(cat))
+    
+    let newCats = [...scansFilters.categoryL1].filter(c => c !== 'All Categories')
+    if (allSelected) {
+      newCats = newCats.filter(cat => !categoriesInMain.includes(cat))
+    } else {
+      categoriesInMain.forEach(cat => {
+        if (!newCats.includes(cat)) newCats.push(cat)
+      })
+    }
+    
+    if (newCats.length === 0) newCats = ['All Categories']
+    setScansFilters((prev) => {
+      const next = { ...prev, categoryL1: newCats }
+      setActiveScansFilters(next)
+      return next
+    })
+  }
+
+  const toggleScansCategoryL2 = (cat) => {
+    let newCats = [...scansFilters.categoryL2]
+    if (cat === 'All Categories') {
+      newCats = ['All Categories']
+    } else {
+      newCats = newCats.filter(c => c !== 'All Categories')
+      if (newCats.includes(cat)) {
+        newCats = newCats.filter(c => c !== cat)
+        if (newCats.length === 0) newCats = ['All Categories']
+      } else {
+        newCats.push(cat)
+      }
+    }
+    setScansFilters({ ...scansFilters, categoryL2: newCats })
   }
 
   // Handle click outside for Scans Category dropdown
   React.useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isScansCategoryDropdownOpen && !event.target.closest('.scans-category-dropdown')) {
-        setIsScansCategoryDropdownOpen(false)
+      if ((isScansCategoryL1DropdownOpen || isScansCategoryL2DropdownOpen) && !event.target.closest('.scans-category-dropdown')) {
+        setIsScansCategoryL1DropdownOpen(false)
+        setIsScansCategoryL2DropdownOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isScansCategoryDropdownOpen])
+  }, [isScansCategoryL1DropdownOpen, isScansCategoryL2DropdownOpen])
 
   const handleViewDetails = (item) => {
     setSelectedProduct(item)
@@ -572,32 +631,93 @@ const LocationView = () => {
           </div>
 
           <div className="space-y-1.5 relative scans-category-dropdown">
-            <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">Category</label>
+            <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">Main Category</label>
             <button 
               type="button"
-              onClick={() => setIsScansCategoryDropdownOpen(!isScansCategoryDropdownOpen)}
+              onClick={() => setIsScansCategoryL1DropdownOpen(!isScansCategoryL1DropdownOpen)}
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-left flex items-center justify-between"
             >
               <span className="truncate">
-                {scansFilters.category.includes('All Categories') 
+                {scansFilters.categoryL1.includes('All Categories') 
                   ? 'All Categories' 
-                  : `${scansFilters.category.length} Selected`}
+                  : `${scansFilters.categoryL1.length} Selected`}
               </span>
-              <ChevronDown className={`text-gray-400 transition-transform ${isScansCategoryDropdownOpen ? 'rotate-180' : ''}`} size={16} />
+              <ChevronDown className={`text-gray-400 transition-transform ${isScansCategoryL1DropdownOpen ? 'rotate-180' : ''}`} size={16} />
             </button>
 
-            {isScansCategoryDropdownOpen && (
+            {isScansCategoryL1DropdownOpen && (
+              <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-[400px] overflow-y-auto animate-in zoom-in-95 duration-200 custom-scrollbar">
+                <div className="p-2 space-y-4">
+                  <label className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border-b border-gray-50 pb-3">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
+                      checked={scansFilters.categoryL1.includes('All Categories')}
+                      onChange={() => toggleScansCategoryL1('All Categories')}
+                    />
+                    <span className={`text-sm font-bold ${scansFilters.categoryL1.includes('All Categories') ? 'text-blue-600' : 'text-gray-600'}`}>
+                      All Categories
+                    </span>
+                  </label>
+
+                  {Object.entries(CATEGORIES_BY_MAIN).map(([mainCat, subCats]) => (
+                    <div key={mainCat} className="space-y-1">
+                      <div 
+                        className="px-3 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50/50 rounded-lg flex justify-between items-center group cursor-pointer hover:bg-gray-100 transition-colors"
+                        onClick={() => toggleScansMainCategory(mainCat)}
+                      >
+                        {mainCat}
+                        <span className="text-[9px] bg-white px-1.5 py-0.5 rounded border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity">Select All</span>
+                      </div>
+                      <div className="pl-2 space-y-0.5">
+                        {subCats.map(cat => (
+                          <label key={cat} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
+                            <input 
+                              type="checkbox" 
+                              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
+                              checked={scansFilters.categoryL1.includes(cat)}
+                              onChange={() => toggleScansCategoryL1(cat)}
+                            />
+                            <span className={`text-sm ${scansFilters.categoryL1.includes(cat) ? 'font-bold text-blue-600' : 'text-gray-600'}`}>
+                              {cat}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5 relative scans-category-dropdown">
+            <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">Sub Category</label>
+            <button 
+              type="button"
+              onClick={() => setIsScansCategoryL2DropdownOpen(!isScansCategoryL2DropdownOpen)}
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-left flex items-center justify-between"
+            >
+              <span className="truncate">
+                {scansFilters.categoryL2.includes('All Categories') 
+                  ? 'All Categories' 
+                  : `${scansFilters.categoryL2.length} Selected`}
+              </span>
+              <ChevronDown className={`text-gray-400 transition-transform ${isScansCategoryL2DropdownOpen ? 'rotate-180' : ''}`} size={16} />
+            </button>
+
+            {isScansCategoryL2DropdownOpen && (
               <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-[300px] overflow-y-auto animate-in zoom-in-95 duration-200">
                 <div className="p-2 space-y-1">
-                  {scansCategories.map(cat => (
+                  {['All Categories', ...scansSubCategories].map(cat => (
                     <label key={cat} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
                       <input 
                         type="checkbox" 
                         className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
-                        checked={scansFilters.category.includes(cat)}
-                        onChange={() => toggleScansCategory(cat)}
+                        checked={scansFilters.categoryL2.includes(cat)}
+                        onChange={() => toggleScansCategoryL2(cat)}
                       />
-                      <span className={`text-sm ${scansFilters.category.includes(cat) ? 'font-bold text-blue-600' : 'text-gray-600'}`}>
+                      <span className={`text-sm ${scansFilters.categoryL2.includes(cat) ? 'font-bold text-blue-600' : 'text-gray-600'}`}>
                         {cat}
                       </span>
                     </label>

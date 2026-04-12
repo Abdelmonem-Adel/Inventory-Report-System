@@ -17,6 +17,7 @@ import { exportToCSV } from '../utils/csvExport'
 import { Search, Filter, X, ChevronDown, Calendar, AlertCircle, BarChart3, Package, FileDown, Eye, EyeOff } from 'lucide-react'
 import { isValid } from 'date-fns'
 import { useBulkToggleAlertVisibility } from '../api/hooks'
+import { CATEGORIES_L1, SUB_CATEGORY_TO_CATEGORY, getCategoryForSub, CATEGORIES_BY_MAIN } from '../constants/categoryMapping'
 
 const InventoryView = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}')
@@ -37,7 +38,8 @@ const InventoryView = () => {
 
   const [filters, setFilters] = useState({
     search: '',
-    category: ['All Categories'],
+    categoryL1: ['All Categories'],
+    categoryL2: ['All Categories'],
     status: 'All Statuses',
     dateFrom: '',
     dateTo: ''
@@ -46,12 +48,14 @@ const InventoryView = () => {
   const [activeFilters, setActiveFilters] = useState(filters)
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false)
-  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false)
+  const [isCategoryL1DropdownOpen, setIsCategoryL1DropdownOpen] = useState(false)
+  const [isCategoryL2DropdownOpen, setIsCategoryL2DropdownOpen] = useState(false)
   const [expiryDaysFilter, setExpiryDaysFilter] = useState(30)
   const [expiryVisibility, setExpiryVisibility] = useState('shown')
   const [chartStatuses, setChartStatuses] = useState(['Match', 'Gain', 'Loss'])
   const [expiryInventoryDateFrom, setExpiryInventoryDateFrom] = useState('')
   const [expiryInventoryDateTo, setExpiryInventoryDateTo] = useState('')
+
   
   const bulkHideMutation = useBulkToggleAlertVisibility()
 
@@ -97,10 +101,18 @@ const InventoryView = () => {
         if (!match) return false
       }
       
-      // Category filter (Array)
-      if (activeFilters.category && !activeFilters.category.includes('All Categories')) {
-        const itemCategories = (scan.category || '').split(',').map(c => c.trim())
-        const hasMatch = activeFilters.category.some(cat => itemCategories.includes(cat))
+      // Category L1 filter
+      if (activeFilters.categoryL1 && !activeFilters.categoryL1.includes('All Categories')) {
+        const itemSubCategories = (scan.category || '').split(',').map(c => c.trim())
+        const itemL1Categories = [...new Set(itemSubCategories.map(sub => getCategoryForSub(sub)))]
+        const hasMatch = activeFilters.categoryL1.some(cat => itemL1Categories.includes(cat))
+        if (!hasMatch) return false
+      }
+      
+      // Category L2 filter
+      if (activeFilters.categoryL2 && !activeFilters.categoryL2.includes('All Categories')) {
+        const itemSubCategories = (scan.category || '').split(',').map(c => c.trim())
+        const hasMatch = activeFilters.categoryL2.some(cat => itemSubCategories.includes(cat))
         if (!hasMatch) return false
       }
 
@@ -145,25 +157,34 @@ const InventoryView = () => {
     })
   }, [rawScansData, activeFilters, expiryDaysFilter, expiryVisibility, expiryInventoryDateFrom, expiryInventoryDateTo])
 
-  const categories = useMemo(() => {
+  const subCategories = useMemo(() => {
     if (!inventoryData) return []
-    const allCats = inventoryData.flatMap(s => (s.category || '').split(',').map(c => c.trim()))
-    return ['All Categories', ...new Set(allCats)].filter(Boolean)
-  }, [inventoryData])
+    const allSubs = inventoryData.flatMap(s => (s.category || '').split(',').map(c => c.trim()))
+    const uniqueSubs = [...new Set(allSubs)].filter(Boolean).sort()
+    
+    // Filter subs based on selected L1 categories
+    if (filters.categoryL1 && !filters.categoryL1.includes('All Categories')) {
+      return uniqueSubs.filter(sub => filters.categoryL1.includes(getCategoryForSub(sub)))
+    }
+    
+    return uniqueSubs
+  }, [inventoryData, filters.categoryL1])
 
   const handleApplyFilters = () => {
     setActiveFilters(filters)
-    setIsCategoryDropdownOpen(false)
+    setIsCategoryL1DropdownOpen(false)
+    setIsCategoryL2DropdownOpen(false)
   }
   const handleClearFilters = () => {
-    const cleared = { search: '', category: ['All Categories'], status: 'All Statuses', dateFrom: '', dateTo: '' }
+    const cleared = { search: '', categoryL1: ['All Categories'], categoryL2: ['All Categories'], status: 'All Statuses', dateFrom: '', dateTo: '' }
     setFilters(cleared)
     setActiveFilters(cleared)
-    setIsCategoryDropdownOpen(false)
+    setIsCategoryL1DropdownOpen(false)
+    setIsCategoryL2DropdownOpen(false)
   }
 
-  const toggleCategory = (cat) => {
-    let newCats = [...filters.category]
+  const toggleCategoryL1 = (cat) => {
+    let newCats = [...filters.categoryL1]
     if (cat === 'All Categories') {
       newCats = ['All Categories']
     } else {
@@ -175,7 +196,44 @@ const InventoryView = () => {
         newCats.push(cat)
       }
     }
-    setFilters({ ...filters, category: newCats })
+    // Reset L2 when L1 changes? Probably better to filter the L2 list.
+    // We'll keep existing L2 selections but they might be hidden if they don't match selected L1.
+    setFilters({ ...filters, categoryL1: newCats })
+  }
+
+  const toggleMainCategory = (mainCat) => {
+    const categoriesInMain = CATEGORIES_BY_MAIN[mainCat] || []
+    const allSelected = categoriesInMain.every(cat => filters.categoryL1.includes(cat))
+    
+    let newCats = [...filters.categoryL1].filter(c => c !== 'All Categories')
+    if (allSelected) {
+      // Unselect all in this main group
+      newCats = newCats.filter(cat => !categoriesInMain.includes(cat))
+    } else {
+      // Select all in this main group
+      categoriesInMain.forEach(cat => {
+        if (!newCats.includes(cat)) newCats.push(cat)
+      })
+    }
+    
+    if (newCats.length === 0) newCats = ['All Categories']
+    setFilters({ ...filters, categoryL1: newCats })
+  }
+
+  const toggleCategoryL2 = (cat) => {
+    let newCats = [...filters.categoryL2]
+    if (cat === 'All Categories') {
+      newCats = ['All Categories']
+    } else {
+      newCats = newCats.filter(c => c !== 'All Categories')
+      if (newCats.includes(cat)) {
+        newCats = newCats.filter(c => c !== cat)
+        if (newCats.length === 0) newCats = ['All Categories']
+      } else {
+        newCats.push(cat)
+      }
+    }
+    setFilters({ ...filters, categoryL2: newCats })
   }
 
   const handleViewHistory = (product) => {
@@ -195,13 +253,14 @@ const InventoryView = () => {
   // Close dropdown on click outside
   React.useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isCategoryDropdownOpen && !event.target.closest('.category-dropdown-container')) {
-        setIsCategoryDropdownOpen(false)
+      if ((isCategoryL1DropdownOpen || isCategoryL2DropdownOpen) && !event.target.closest('.category-dropdown-container')) {
+        setIsCategoryL1DropdownOpen(false)
+        setIsCategoryL2DropdownOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isCategoryDropdownOpen])
+  }, [isCategoryL1DropdownOpen, isCategoryL2DropdownOpen])
 
   if (isLoading) return <Spinner size="lg" />
   if (isError) return <ErrorState message={error?.message} onRetry={refetch} />
@@ -237,7 +296,7 @@ const InventoryView = () => {
 
       {/* Filter Bar */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
           <div className="space-y-1.5">
             <label className="text-10px uppercase font-bold text-muted tracking-wider">Search</label>
             <div className="relative">
@@ -253,32 +312,93 @@ const InventoryView = () => {
           </div>
 
           <div className="space-y-1.5 relative category-dropdown-container">
-            <label className="text-10px uppercase font-bold text-muted tracking-wider">Category</label>
+            <label className="text-10px uppercase font-bold text-muted tracking-wider">Main Category</label>
             <button 
               type="button"
-              onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+              onClick={() => setIsCategoryL1DropdownOpen(!isCategoryL1DropdownOpen)}
               className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-left flex items-center justify-between"
             >
               <span className="truncate">
-                {filters.category.includes('All Categories') 
+                {filters.categoryL1.includes('All Categories') 
                   ? 'All Categories' 
-                  : `${filters.category.length} Selected`}
+                  : `${filters.categoryL1.length} Selected`}
               </span>
-              <ChevronDown className={`text-gray-400 transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} size={16} />
+              <ChevronDown className={`text-gray-400 transition-transform ${isCategoryL1DropdownOpen ? 'rotate-180' : ''}`} size={16} />
             </button>
 
-            {isCategoryDropdownOpen && (
+            {isCategoryL1DropdownOpen && (
+              <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-50 max-h-[400px] overflow-y-auto animate-in zoom-in-95 duration-200 custom-scrollbar">
+                <div className="p-2 space-y-4">
+                  <label className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border-b border-gray-50 pb-3">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
+                      checked={filters.categoryL1.includes('All Categories')}
+                      onChange={() => toggleCategoryL1('All Categories')}
+                    />
+                    <span className={`text-sm font-bold ${filters.categoryL1.includes('All Categories') ? 'text-blue-600' : 'text-gray-600'}`}>
+                      All Categories
+                    </span>
+                  </label>
+
+                  {Object.entries(CATEGORIES_BY_MAIN).map(([mainCat, subCats]) => (
+                    <div key={mainCat} className="space-y-1">
+                      <div 
+                        className="px-3 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50/50 rounded-lg flex justify-between items-center group cursor-pointer hover:bg-gray-100 transition-colors"
+                        onClick={() => toggleMainCategory(mainCat)}
+                      >
+                        {mainCat}
+                        <span className="text-[9px] bg-white px-1.5 py-0.5 rounded border border-gray-200 opacity-0 group-hover:opacity-100 transition-opacity">Select All</span>
+                      </div>
+                      <div className="pl-2 space-y-0.5">
+                        {subCats.map(cat => (
+                          <label key={cat} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
+                            <input 
+                              type="checkbox" 
+                              className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
+                              checked={filters.categoryL1.includes(cat)}
+                              onChange={() => toggleCategoryL1(cat)}
+                            />
+                            <span className={`text-sm ${filters.categoryL1.includes(cat) ? 'font-bold text-blue-600' : 'text-gray-600'}`}>
+                              {cat}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5 relative category-dropdown-container">
+            <label className="text-10px uppercase font-bold text-muted tracking-wider">Sub Category</label>
+            <button 
+              type="button"
+              onClick={() => setIsCategoryL2DropdownOpen(!isCategoryL2DropdownOpen)}
+              className="w-full px-4 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-left flex items-center justify-between"
+            >
+              <span className="truncate">
+                {filters.categoryL2.includes('All Categories') 
+                  ? 'All Categories' 
+                  : `${filters.categoryL2.length} Selected`}
+              </span>
+              <ChevronDown className={`text-gray-400 transition-transform ${isCategoryL2DropdownOpen ? 'rotate-180' : ''}`} size={16} />
+            </button>
+
+            {isCategoryL2DropdownOpen && (
               <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-100 rounded-xl shadow-xl z-50 max-h-[300px] overflow-y-auto animate-in zoom-in-95 duration-200">
                 <div className="p-2 space-y-1">
-                  {categories.map(cat => (
+                  {['All Categories', ...subCategories].map(cat => (
                     <label key={cat} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
                       <input 
                         type="checkbox" 
                         className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
-                        checked={filters.category.includes(cat)}
-                        onChange={() => toggleCategory(cat)}
+                        checked={filters.categoryL2.includes(cat)}
+                        onChange={() => toggleCategoryL2(cat)}
                       />
-                      <span className={`text-sm ${filters.category.includes(cat) ? 'font-bold text-blue-600' : 'text-gray-600'}`}>
+                      <span className={`text-sm ${filters.categoryL2.includes(cat) ? 'font-bold text-blue-600' : 'text-gray-600'}`}>
                         {cat}
                       </span>
                     </label>
@@ -287,6 +407,7 @@ const InventoryView = () => {
               </div>
             )}
           </div>
+
 
           <div className="space-y-1.5">
             <label className="text-10px uppercase font-bold text-muted tracking-wider">Product Status</label>

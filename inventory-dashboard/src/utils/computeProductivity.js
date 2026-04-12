@@ -15,7 +15,7 @@ export const computeProductivityMetrics = (scans, options = {}) => {
   }
 
   // Assumption for UI display:
-  // "Hourly" averages are derived from "Daily" averages by dividing by 7 hours per day.
+  // "Hourly" averages are derived from "Daily" averages by dividing by 5 hours per day.
   const HOURS_PER_DAY = 5
 
   // For daily averages:

@@ -9,6 +9,7 @@ export const getInventoryData = async (req, res) => {
   }
 };
 
+
 export const getInventoryKPIs = async (req, res) => {
   try {
     const inventoryData = await Inventory.find({});

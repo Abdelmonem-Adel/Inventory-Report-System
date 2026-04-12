@@ -9,6 +9,7 @@ export const getAllScansData = async (req, res) => {
     }
 };
 
+
 export const getitemUnique = async (req, res) => {
     try {
         const scans = await Scans.find({});
@@ -77,7 +78,6 @@ export const getTotleLocationMatch = async (req, res) => {
 
 export const getTotleLocationMissMatch = async (req, res) => {
     try {
-        // As per prompt: getTotleLocationMissMatch(Extra,Missing)
         const missMatchLocations = await Scans.distinct('productLocation', { 
             locationStatus: { $in: ['Extra', 'Missing'] } 
         });

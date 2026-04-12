@@ -5,4 +5,4 @@ const router = express.Router();
 
 router.get('/productivity-hours', getProductivityHours);
 
-export default router;
+export default router;

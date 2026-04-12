@@ -1,4 +1,5 @@
 import { parseISO, isValid } from 'date-fns'
+import { getCategoryForSub } from '../constants/categoryMapping'
 
 export const computeInventoryMetrics = (Inventory, filters = {}) => {
   // Apply filters first
@@ -11,9 +12,18 @@ export const computeInventoryMetrics = (Inventory, filters = {}) => {
       if (!match) return false
     }
 
-    if (filters.category && Array.isArray(filters.category) && filters.category.length > 0 && !filters.category.includes('All Categories')) {
-      const itemCategories = (scan.category || '').split(',').map(c => c.trim())
-      const hasMatch = filters.category.some(cat => itemCategories.includes(cat))
+    // Level 1 Category Filter
+    if (filters.categoryL1 && Array.isArray(filters.categoryL1) && !filters.categoryL1.includes('All Categories')) {
+      const itemSubCategories = (scan.category || '').split(',').map(c => c.trim())
+      const itemL1Categories = [...new Set(itemSubCategories.map(sub => getCategoryForSub(sub)))]
+      const hasMatch = filters.categoryL1.some(cat => itemL1Categories.includes(cat))
+      if (!hasMatch) return false
+    }
+
+    // Level 2 Sub Category Filter
+    if (filters.categoryL2 && Array.isArray(filters.categoryL2) && !filters.categoryL2.includes('All Categories')) {
+      const itemSubCategories = (scan.category || '').split(',').map(c => c.trim())
+      const hasMatch = filters.categoryL2.some(cat => itemSubCategories.includes(cat))
       if (!hasMatch) return false
     }
 
@@ -22,6 +32,7 @@ export const computeInventoryMetrics = (Inventory, filters = {}) => {
     }
 
     if (filters.dateFrom) {
+
       const scanDateRaw = scan.dateInput || scan.date
       const scanDate = scanDateRaw ? new Date(scanDateRaw) : null
       if (isValid(scanDate) && scanDate < new Date(filters.dateFrom)) return false
