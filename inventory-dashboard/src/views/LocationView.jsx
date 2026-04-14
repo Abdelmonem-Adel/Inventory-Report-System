@@ -238,65 +238,52 @@ const LocationView = () => {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* Location KPI Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-
-
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-2xl">
-          <StatCard 
-            label={
-              <div>
-                <div>Total Products (Unique)</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 text-2xl">
+        <StatCard 
+          label={
+            <div>
+              <div>Total Products (Unique)</div>
+            </div>
+          }
+          value={
+            <div className='flex items-start gap-14'>
+              <span>{metrics.totalProducts}</span>
+              <div className='text-sm text-gray-500 font-semibold mt-1'>
+                Overall Items: <span className='text-black text-bold text-xl'>{metrics.productStatus.match + metrics.productStatus.mismatch}</span> 
               </div>
-            }
-            value={
-              <div className='flex items-start gap-14'>
-                <span>{metrics.totalProducts}</span>
-                <div className='text-sm text-gray-500 font-semibold mt-1'>
-                  Overall Items: <span className='text-black text-bold text-xl'>{metrics.productStatus.match + metrics.productStatus.mismatch}</span> 
-                </div>
-              </div>
-             
-            }
-            color="blue"
-          />
-          <StatCard label="Total Locations (Unique)" value={metrics.totalLocations} color="blue" />
-        </div>
-
-
-
-
+            </div>
+          }
+          color="blue"
+        />
+        <StatCard label="Total Locations (Unique)" value={metrics.totalLocations} color="blue"/>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-blue-500 p-4">
-            <div className="text-10px uppercase font-bold text-gray-400 mb-3 tracking-widest">Product Status (In Locations)</div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="text-2xl font-extrabold text-green-600">{metrics.productStatus.match}</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase">Match <Badge variant="gain" className="ml-1">{Math.round(metrics.productStatus.matchPercent)}%</Badge></div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-2xl font-extrabold text-red-600">{metrics.productStatus.mismatch}</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase">Miss Match <Badge variant="missing" className="ml-1">{Math.round(metrics.productStatus.mismatchPercent)}%</Badge></div>
-              </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-blue-500 p-4 h-full">
+          <div className="text-10px uppercase font-bold text-gray-400 mb-3 tracking-widest">Product Status (In Locations)</div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="text-2xl font-extrabold text-green-600">{metrics.productStatus.match}</div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase">Match <Badge variant="gain" className="ml-1">{Math.round(metrics.productStatus.matchPercent)}%</Badge></div>
             </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-blue-500 p-4">
-            <div className="text-10px uppercase font-bold text-gray-400 mb-3 tracking-widest">Location Status (Per Scans)</div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div className="text-2xl font-extrabold text-green-600">{metrics.locationStatus.match}</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase">Match <Badge variant="gain" className="ml-1">{Math.round(metrics.locationStatus.matchPercent)}%</Badge></div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-2xl font-extrabold text-orange-600">{metrics.locationStatus.mismatch}</div>
-                <div className="text-[10px] font-bold text-gray-400 uppercase">Miss Match <Badge variant="extra" className="ml-1">{Math.round(metrics.locationStatus.mismatchPercent)}%</Badge></div>
-              </div>
+            <div className="space-y-1">
+              <div className="text-2xl font-extrabold text-red-600">{metrics.productStatus.mismatch}</div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase">Miss Match <Badge variant="missing" className="ml-1">{Math.round(metrics.productStatus.mismatchPercent)}%</Badge></div>
             </div>
           </div>
         </div>
+
+        {/* <div className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-blue-500 p-4">
+          <div className="text-10px uppercase font-bold text-gray-400 mb-3 tracking-widest">Location Status (Per Scans)</div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <div className="text-2xl font-extrabold text-green-600">{metrics.locationStatus.match}</div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase">Match <Badge variant="gain" className="ml-1">{Math.round(metrics.locationStatus.matchPercent)}%</Badge></div>
+            </div>
+            <div className="space-y-1">
+              <div className="text-2xl font-extrabold text-orange-600">{metrics.locationStatus.mismatch}</div>
+              <div className="text-[10px] font-bold text-gray-400 uppercase">Miss Match <Badge variant="extra" className="ml-1">{Math.round(metrics.locationStatus.mismatchPercent)}%</Badge></div>
+            </div>
+          </div>
+        </div> */}
       </div>
 
 
