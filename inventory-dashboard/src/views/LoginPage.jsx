@@ -73,7 +73,8 @@ const LoginPage = ({ onLogin }) => {
           type="button"
           onClick={() => {
             const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
-            window.location.href = `${apiBase}/auth/google`;
+            const authUrl = apiBase.includes('/api') ? `${apiBase}/auth/google` : `${apiBase}/api/auth/google`;
+            window.location.href = authUrl;
           }}
           className="w-full flex items-center justify-center gap-3 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.98]"
         >

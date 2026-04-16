@@ -13,20 +13,34 @@ const app = express();
 app.use(passport.initialize());
 
 const allowedOrigins = [
-  'https://inventory.breadfastwh.online',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000'
-];
+  'inventory.breadfastwh.online',
+  'www.inventory.breadfastwh.online',
+  'localhost:3000',
+  '127.0.0.1:3000',
+].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // 1. Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+
+    // 2. Clean origin for comparison (remove protocol and trailing slash)
+    const cleanOrigin = origin.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    
+    // 3. Check against allowed list or environment variable
+    const isAllowed = allowedOrigins.some(ao => cleanOrigin === ao.replace(/^https?:\/\//, '').replace(/\/$/, '')) || (process.env.FRONTEND_URL && cleanOrigin === process.env.FRONTEND_URL.replace(/^https?:\/\//, '').replace(/\/$/, ''));
+
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.log(`[CORS] Rejected origin: ${origin} (Cleaned: ${cleanOrigin})`);
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  optionsSuccessStatus: 200 // Some legacy browsers crash on 204
 }));
 
 
