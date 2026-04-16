@@ -12,6 +12,30 @@ export const useScans = () => {
   })
 }
 
+export const useLocationSummary = (filters = {}) => {
+  return useQuery({
+    queryKey: ['locationSummary', filters],
+    queryFn: async () => {
+      const { data } = await client.get('/locations/summary', { params: filters })
+      return data
+    },
+    refetchInterval: 60000,
+  })
+}
+
+export const usePaginatedScans = (filters = {}, page = 1, limit = 25) => {
+  return useQuery({
+    queryKey: ['paginatedScans', filters, page, limit],
+    queryFn: async () => {
+      const { data } = await client.get('/locations/scans/paginated', { 
+        params: { ...filters, page, limit } 
+      })
+      return data
+    },
+    refetchInterval: 60000,
+  })
+}
+
 export const useToggleAlertVisibility = () => {
   const queryClient = useQueryClient()
 

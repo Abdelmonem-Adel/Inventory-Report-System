@@ -9,9 +9,16 @@ import {
 import Badge from '../ui/Badge'
 import { formatDate } from '../../utils/dateUtils'
 
-const ScansTable = ({ data }) => {
+const ScansTable = ({ 
+  data, 
+  manualPagination = false, 
+  pageCount = 1, 
+  pageIndex = 0, 
+  onPageChange 
+}) => {
   const columns = useMemo(
     () => [
+      // ... (rest of columns remain exactly the same)
       {
         header: 'Location',
         accessorKey: 'productLocation',
@@ -93,10 +100,19 @@ const ScansTable = ({ data }) => {
   const table = useReactTable({
     data,
     columns,
+    pageCount: manualPagination ? pageCount : undefined,
+    state: manualPagination ? { pagination: { pageIndex, pageSize: 25 } } : undefined,
+    onPaginationChange: manualPagination ? (updater) => {
+        if (typeof updater === 'function') {
+            const next = updater({ pageIndex, pageSize: 25 });
+            onPageChange(next.pageIndex);
+        }
+    } : undefined,
+    manualPagination: manualPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
+    getPaginationRowModel: manualPagination ? undefined : getPaginationRowModel(),
+    initialState: manualPagination ? undefined : {
       pagination: {
         pageSize: 20,
       },

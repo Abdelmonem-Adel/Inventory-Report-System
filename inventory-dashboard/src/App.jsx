@@ -53,7 +53,7 @@ const App = () => {
               } />
               <Route path="/inventory" element={<ProtectedRoute><InventoryView /></ProtectedRoute>} />
               <Route path="/location" element={<ProtectedRoute><LocationView /></ProtectedRoute>} />
-              <Route path="/productivity" element={<ProtectedRoute roles={['top_admin', 'admin', 'manager']}><ProductivityView /></ProtectedRoute>} />
+              <Route path="/productivity" element={<ProtectedRoute roles={['top_admin', 'admin', 'manager', 'shiftLeader']}><ProductivityView /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute roles={['top_admin', 'admin']}><ImportPage /></ProtectedRoute>} />
               <Route path="*" element={<Navigate to="/inventory" />} />
             </Routes>

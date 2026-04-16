@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react'
-import { useScans, useUniqueInventorySummary } from '../api/hooks'
+import { useLocationSummary, usePaginatedScans, useUniqueInventorySummary } from '../api/hooks'
 import { computeLocationMetrics, getPerItemLocationStats, getTopMissMatchItems, getDiscrepancyPutaway } from '../utils/computeLocation'
 import StatCard from '../components/ui/StatCard'
 import SectionCard from '../components/ui/SectionCard'
@@ -18,7 +18,49 @@ import ScansTable from '../components/tables/ScansTable'
 import { CATEGORIES_L1, getCategoryForSub, CATEGORIES_BY_MAIN } from '../constants/categoryMapping'
 
 const LocationView = () => {
-  const { data: scans, isLoading, isError, error, refetch } = useScans()
+  // Scans Detail Table Filters
+  const [scansFilters, setScansFilters] = useState({
+    search: '',
+    categoryL1: ['All Categories'],
+    categoryL2: ['All Categories'],
+    daysFilterMode: 'range', // 'range' uses dateFrom/dateTo, 'days' uses selectedDays
+    selectedDays: [],
+    dateFrom: '',
+    dateTo: ''
+  })
+  const [activeScansFilters, setActiveScansFilters] = useState(scansFilters)
+  const [scansPage, setScansPage] = useState(0)
+
+  const [isScansCategoryL1DropdownOpen, setIsScansCategoryL1DropdownOpen] = useState(false)
+  const [isScansCategoryL2DropdownOpen, setIsScansCategoryL2DropdownOpen] = useState(false)
+  const [isInventoryDaysDropdownOpen, setIsInventoryDaysDropdownOpen] = useState(false)
+
+  // Use Summary API for Top half
+  const { 
+    data: summary, 
+    isLoading: isLoadingSummary, 
+    isError: isErrorSummary, 
+    error: errorSummary, 
+    refetch: refetchSummary 
+  } = useLocationSummary({
+    ...activeScansFilters,
+    categoryL1: activeScansFilters.categoryL1.join(','),
+    categoryL2: activeScansFilters.categoryL2.join(','),
+    selectedDays: activeScansFilters.selectedDays.join(',')
+  })
+
+  // Use Paginated API for Bottom table
+  const { 
+    data: paginatedData, 
+    isLoading: isLoadingScans, 
+    isError: isErrorScans 
+  } = usePaginatedScans({
+    ...activeScansFilters,
+    categoryL1: activeScansFilters.categoryL1.join(','),
+    categoryL2: activeScansFilters.categoryL2.join(','),
+    selectedDays: activeScansFilters.selectedDays.join(',')
+  }, scansPage + 1)
+
   const { data: uniqueInventorySummary = [], isLoading: isLoadingUniqueInventory } = useUniqueInventorySummary()
 
   // Unique Inventory Table Filters & Pagination
@@ -36,117 +78,40 @@ const LocationView = () => {
     }
     if (uniqueDateTo) {
       const to = new Date(uniqueDateTo)
-      to.setHours(23,59,59,999)
+      to.setHours(23, 59, 59, 999)
       rows = rows.filter(r => r.date && new Date(r.date) <= to)
     }
     return rows
   }, [uniqueInventorySummary, uniqueDateFrom, uniqueDateTo])
 
   const totalPages = Math.ceil(filteredUniqueRows.length / uniquePageSize) || 1
-  const pagedUniqueRows = filteredUniqueRows.slice((uniquePage-1)*uniquePageSize, uniquePage*uniquePageSize)
+  const pagedUniqueRows = filteredUniqueRows.slice((uniquePage - 1) * uniquePageSize, uniquePage * uniquePageSize)
 
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const metrics = summary?.metrics
+  const itemStats = summary?.itemStats || []
+  const discrepancyPutaway = summary?.discrepancyPutaway || []
+  const availableDays = summary?.availableDays || []
   
-  // Scans Detail Table Filters
-  const [scansFilters, setScansFilters] = useState({
-    search: '',
-    categoryL1: ['All Categories'],
-    categoryL2: ['All Categories'],
-    daysFilterMode: 'range', // 'range' uses dateFrom/dateTo, 'days' uses selectedDays
-    selectedDays: [],
-    dateFrom: '',
-    dateTo: ''
-  })
-  const [activeScansFilters, setActiveScansFilters] = useState(scansFilters)
-  const [isScansCategoryL1DropdownOpen, setIsScansCategoryL1DropdownOpen] = useState(false)
-  const [isScansCategoryL2DropdownOpen, setIsScansCategoryL2DropdownOpen] = useState(false)
-  const [isInventoryDaysDropdownOpen, setIsInventoryDaysDropdownOpen] = useState(false)
-
-  const filteredScans = useMemo(() => {
-    if (!scans) return []
-    return scans.filter(scan => {
-      if (activeScansFilters.search) {
-        const s = activeScansFilters.search.toLowerCase()
-        const match = (scan.SKUname || '').toLowerCase().includes(s) ||
-                      (scan.barcode || '').toLowerCase().includes(s) ||
-                      (scan.id || '').toString().toLowerCase().includes(s) ||
-                      (scan.userName || '').toLowerCase().includes(s) ||
-                      (scan.productLocation || '').toLowerCase().includes(s)
-        if (!match) return false
-      }
-      
-      // Category L1 filter
-      if (activeScansFilters.categoryL1 && !activeScansFilters.categoryL1.includes('All Categories')) {
-        const itemSubCategories = (scan.category || '').split(',').map(c => c.trim())
-        const itemL1Categories = [...new Set(itemSubCategories.map(sub => getCategoryForSub(sub)))]
-        const hasMatch = activeScansFilters.categoryL1.some(cat => itemL1Categories.includes(cat))
-        if (!hasMatch) return false
-      }
-      
-      // Category L2 filter
-      if (activeScansFilters.categoryL2 && !activeScansFilters.categoryL2.includes('All Categories')) {
-        const itemSubCategories = (scan.category || '').split(',').map(c => c.trim())
-        const hasMatch = activeScansFilters.categoryL2.some(cat => itemSubCategories.includes(cat))
-        if (!hasMatch) return false
-      }
-      
-      const scanDateRaw = scan.dateInput || scan.date
-      const scanDate = scanDateRaw ? new Date(scanDateRaw) : null
-      const scanDateKey = scanDateRaw
-        ? (typeof scanDateRaw === 'string' ? scanDateRaw.slice(0, 10) : (isValid(scanDate) ? scanDate.toISOString().slice(0, 10) : null))
-        : null
-
-      if (activeScansFilters.daysFilterMode === 'days') {
-        // Manual multi-day selection (independent from Category selection)
-        if (activeScansFilters.selectedDays.length > 0) {
-          if (!scanDateKey || !activeScansFilters.selectedDays.includes(scanDateKey)) return false
-        }
-        // If selectedDays is empty, treat it as "all days" (so don't filter by date)
-      } else {
-        // Date range filtering (From/To inputs)
-        if (activeScansFilters.dateFrom && isValid(scanDate)) {
-          if (scanDate < new Date(activeScansFilters.dateFrom)) return false
-        }
-        if (activeScansFilters.dateTo && isValid(scanDate)) {
-          const dateTo = new Date(activeScansFilters.dateTo)
-          dateTo.setHours(23, 59, 59, 999) // Include full end day
-          if (scanDate > dateTo) return false
-        }
-      }
-      
-      return true
-    })
-  }, [scans, activeScansFilters])
-
-  const metrics = useMemo(() => {
-    if (!filteredScans) return null
-    return computeLocationMetrics(filteredScans)
-  }, [filteredScans])
-
-  const itemStats = useMemo(() => {
-    if (!filteredScans) return []
-    return getPerItemLocationStats(filteredScans)
-  }, [filteredScans])
-
-  const topMissMatch = useMemo(() => getTopMissMatchItems(itemStats), [itemStats])
-  const discrepancyPutaway = useMemo(() => {
-    if (!filteredScans) return []
-    return getDiscrepancyPutaway(filteredScans)
-  }, [filteredScans])
+  const topMissMatch = useMemo(() => {
+    return [...itemStats]
+      .sort((a, b) => b.missMatchLocs - a.missMatchLocs)
+      .slice(0, 5)
+  }, [itemStats])
 
   const scansSubCategories = useMemo(() => {
-    if (!scans) return []
-    const allSubs = scans.flatMap(s => (s.category || '').split(',').map(c => c.trim()))
+    const allSubs = itemStats.flatMap(item => (item.category || '').split(',').map(c => c.trim()))
     const uniqueSubs = [...new Set(allSubs)].filter(Boolean).sort()
     
-    // Filter subs based on selected L1 categories
     if (scansFilters.categoryL1 && !scansFilters.categoryL1.includes('All Categories')) {
       return uniqueSubs.filter(sub => scansFilters.categoryL1.includes(getCategoryForSub(sub)))
     }
-    
     return uniqueSubs
-  }, [scans, scansFilters.categoryL1])
+  }, [itemStats, scansFilters.categoryL1])
+
+  const categoriesByDayKey = summary?.categoriesByDay || {}
 
   const handleApplyScansFilters = () => {
     setActiveScansFilters(scansFilters)
@@ -180,7 +145,7 @@ const LocationView = () => {
   const toggleScansMainCategory = (mainCat) => {
     const categoriesInMain = CATEGORIES_BY_MAIN[mainCat] || []
     const allSelected = categoriesInMain.every(cat => scansFilters.categoryL1.includes(cat))
-    
+
     let newCats = [...scansFilters.categoryL1].filter(c => c !== 'All Categories')
     if (allSelected) {
       newCats = newCats.filter(cat => !categoriesInMain.includes(cat))
@@ -189,7 +154,7 @@ const LocationView = () => {
         if (!newCats.includes(cat)) newCats.push(cat)
       })
     }
-    
+
     if (newCats.length === 0) newCats = ['All Categories']
     setScansFilters((prev) => {
       const next = { ...prev, categoryL1: newCats }
@@ -231,15 +196,15 @@ const LocationView = () => {
     setIsModalOpen(true)
   }
 
-  if (isLoading || isLoadingUniqueInventory) return <Spinner size="lg" />
-  if (isError) return <ErrorState message={error?.message} onRetry={refetch} />
+  if (isLoadingSummary || isLoadingUniqueInventory) return <Spinner size="lg" />
+  if (isErrorSummary) return <ErrorState message={errorSummary?.message} onRetry={refetchSummary} />
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* Location KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 text-2xl">
-        <StatCard 
+        <StatCard
           label={
             <div>
               <div>Total Products (Unique)</div>
@@ -249,14 +214,14 @@ const LocationView = () => {
             <div className='flex items-start gap-14'>
               <span>{metrics.totalProducts}</span>
               <div className='text-sm text-gray-500 font-semibold mt-1'>
-                Overall Items: <span className='text-black text-bold text-xl'>{metrics.productStatus.match + metrics.productStatus.mismatch}</span> 
+                Overall Items: <span className='text-black text-bold text-xl'>{metrics.productStatus.match + metrics.productStatus.mismatch}</span>
               </div>
             </div>
           }
           color="blue"
         />
-        <StatCard label="Total Locations (Unique)" value={metrics.totalLocations} color="blue"/>
-        
+        <StatCard label="Total Locations (Unique)" value={metrics.totalLocations} color="blue" />
+
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 border-l-4 border-blue-500 p-4 h-full">
           <div className="text-10px uppercase font-bold text-gray-400 mb-3 tracking-widest">Product Status (In Locations)</div>
           <div className="grid grid-cols-2 gap-4">
@@ -290,7 +255,7 @@ const LocationView = () => {
 
 
 
-            {/* Unique Inventory Summary Table */}
+      {/* Unique Inventory Summary Table */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col mb-4">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 p-6 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-center gap-3">
@@ -381,8 +346,8 @@ const LocationView = () => {
             <div className="flex justify-between items-center mt-4 px-6 pb-4">
               <div className="text-xs text-gray-600">Page {uniquePage} of {totalPages}</div>
               <div className="flex gap-2">
-                <button disabled={uniquePage === 1} onClick={() => setUniquePage(p => Math.max(1, p-1))} className={`px-3 py-1 rounded-xl border text-xs font-bold ${uniquePage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-purple-600 text-white hover:bg-purple-700'}`}>Prev</button>
-                <button disabled={uniquePage === totalPages} onClick={() => setUniquePage(p => Math.min(totalPages, p+1))} className={`px-3 py-1 rounded-xl border text-xs font-bold ${uniquePage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-purple-600 text-white hover:bg-purple-700'}`}>Next</button>
+                <button disabled={uniquePage === 1} onClick={() => setUniquePage(p => Math.max(1, p - 1))} className={`px-3 py-1 rounded-xl border text-xs font-bold ${uniquePage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-purple-600 text-white hover:bg-purple-700'}`}>Prev</button>
+                <button disabled={uniquePage === totalPages} onClick={() => setUniquePage(p => Math.min(totalPages, p + 1))} className={`px-3 py-1 rounded-xl border text-xs font-bold ${uniquePage === totalPages ? 'bg-gray-100 text-gray-400' : 'bg-purple-600 text-white hover:bg-purple-700'}`}>Next</button>
               </div>
             </div>
           </div>
@@ -398,14 +363,7 @@ const LocationView = () => {
 
       {/* Scan Days Summary Dropdown */}
       {(() => {
-        const normalizeDateKey = (scan) => {
-          const raw = scan.dateInput || scan.date
-          if (!raw) return null
-          if (typeof raw === 'string') return raw.slice(0, 10)
-          const date = new Date(raw)
-          if (isNaN(date)) return null
-          return date.toISOString().slice(0, 10)
-        }
+        const daysArr = availableDays;
         const formatDay = (d) => {
           try {
             const date = new Date(d)
@@ -416,45 +374,6 @@ const LocationView = () => {
             return d
           }
         }
-
-        const dropdownScans = (scans || []).filter(scan => {
-          // Search filter
-          if (activeScansFilters.search) {
-            const s = activeScansFilters.search.toLowerCase()
-            const match = (scan.SKUname || '').toLowerCase().includes(s) ||
-                          (scan.barcode || '').toLowerCase().includes(s) ||
-                          (scan.id || '').toString().toLowerCase().includes(s) ||
-                          (scan.userName || '').toLowerCase().includes(s) ||
-                          (scan.productLocation || '').toLowerCase().includes(s)
-            if (!match) return false
-          }
-          
-          // Category filter
-          if (activeScansFilters.category && !activeScansFilters.category.includes('All Categories')) {
-            const itemCategories = (scan.category || '').split(',').map(c => c.trim())
-            const hasMatch = activeScansFilters.category.some(cat => itemCategories.includes(cat))
-            if (!hasMatch) return false
-          }
-
-          return true
-        })
-
-        const daysArr = Array.from(
-          new Set(dropdownScans.map(s => (normalizeDateKey(s))))
-        ).filter(Boolean);
-        
-        const categoriesByDayKey = daysArr.reduce((acc, dayKey) => {
-          const cats = Array.from(
-            new Set(
-              dropdownScans
-                .filter(s => normalizeDateKey(s) === dayKey)
-                .flatMap(s => (s.category || '').split(',').map(c => c.trim()))
-                .filter(Boolean)
-            )
-          ).sort((a, b) => a.localeCompare(b))
-          acc[dayKey] = cats
-          return acc
-        }, {})
 
         return (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-2">
@@ -467,7 +386,7 @@ const LocationView = () => {
                 <button
                   type="button"
                   className="ml-4 px-5 py-2 bg-blue-600 text-white rounded-lg border border-blue-700 font-bold text-base shadow-md hover:bg-blue-700 transition-all"
-                  style={{minWidth: '70px'}} 
+                  style={{ minWidth: '70px' }}
                   onClick={() => setIsInventoryDaysDropdownOpen(o => !o)}
                 >
                   {isInventoryDaysDropdownOpen ? 'Hide' : 'Show'}
@@ -488,11 +407,10 @@ const LocationView = () => {
                         <div className="mb-2">
                           <button
                             type="button"
-                            className={`w-full px-3 py-2 rounded-lg font-bold text-xs border transition-all ${
-                              scansFilters.daysFilterMode === 'days' && scansFilters.selectedDays.length === 0
+                            className={`w-full px-3 py-2 rounded-lg font-bold text-xs border transition-all ${scansFilters.daysFilterMode === 'days' && scansFilters.selectedDays.length === 0
                                 ? 'bg-blue-600 border-blue-700 text-white'
                                 : 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100'
-                            }`}
+                              }`}
                             onClick={() => {
                               setScansFilters((prev) => {
                                 const nextFilters = { ...prev, daysFilterMode: 'days', selectedDays: [] }
@@ -559,11 +477,11 @@ const LocationView = () => {
                                   <input
                                     type="checkbox"
                                     className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
-                                    checked={scansFilters.category.includes(cat)}
+                                    checked={scansFilters.categoryL1.includes(cat)}
                                     onChange={() => {
                                       // Toggle category only (days selection is independent)
                                       setScansFilters((prev) => {
-                                        let newCats = [...prev.category]
+                                        let newCats = [...prev.categoryL1]
                                         if (cat === 'All Categories') {
                                           newCats = ['All Categories']
                                         } else {
@@ -576,13 +494,13 @@ const LocationView = () => {
                                           if (newCats.length === 0) newCats = ['All Categories']
                                         }
 
-                                        const nextFilters = { ...prev, category: newCats }
+                                        const nextFilters = { ...prev, categoryL1: newCats }
                                         setActiveScansFilters(nextFilters)
                                         return nextFilters
                                       })
                                     }}
                                   />
-                                  <span className={`text-sm ${scansFilters.category.includes(cat) ? 'font-bold text-blue-700' : 'text-gray-700'}`}>
+                                  <span className={`text-sm ${scansFilters.categoryL1.includes(cat) ? 'font-bold text-blue-700' : 'text-gray-700'}`}>
                                     {cat}
                                   </span>
                                 </label>
@@ -607,26 +525,26 @@ const LocationView = () => {
             <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">Search Everywhere</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-              <input 
-                type="text" 
-                placeholder="Name, Location, SKUID or Username..." 
+              <input
+                type="text"
+                placeholder="Name, Location, SKUID or Username..."
                 className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                 value={scansFilters.search}
-                onChange={(e) => setScansFilters({...scansFilters, search: e.target.value})}
+                onChange={(e) => setScansFilters({ ...scansFilters, search: e.target.value })}
               />
             </div>
           </div>
 
           <div className="space-y-1.5 relative scans-category-dropdown">
             <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">Main Category</label>
-            <button 
+            <button
               type="button"
               onClick={() => setIsScansCategoryL1DropdownOpen(!isScansCategoryL1DropdownOpen)}
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-left flex items-center justify-between"
             >
               <span className="truncate">
-                {scansFilters.categoryL1.includes('All Categories') 
-                  ? 'All Categories' 
+                {scansFilters.categoryL1.includes('All Categories')
+                  ? 'All Categories'
                   : `${scansFilters.categoryL1.length} Selected`}
               </span>
               <ChevronDown className={`text-gray-400 transition-transform ${isScansCategoryL1DropdownOpen ? 'rotate-180' : ''}`} size={16} />
@@ -636,8 +554,8 @@ const LocationView = () => {
               <div className="absolute top-full left-0 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-[400px] overflow-y-auto animate-in zoom-in-95 duration-200 custom-scrollbar">
                 <div className="p-2 space-y-4">
                   <label className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border-b border-gray-50 pb-3">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
                       checked={scansFilters.categoryL1.includes('All Categories')}
                       onChange={() => toggleScansCategoryL1('All Categories')}
@@ -649,7 +567,7 @@ const LocationView = () => {
 
                   {Object.entries(CATEGORIES_BY_MAIN).map(([mainCat, subCats]) => (
                     <div key={mainCat} className="space-y-1">
-                      <div 
+                      <div
                         className="px-3 py-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50/50 rounded-lg flex justify-between items-center group cursor-pointer hover:bg-gray-100 transition-colors"
                         onClick={() => toggleScansMainCategory(mainCat)}
                       >
@@ -659,8 +577,8 @@ const LocationView = () => {
                       <div className="pl-2 space-y-0.5">
                         {subCats.map(cat => (
                           <label key={cat} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                            <input 
-                              type="checkbox" 
+                            <input
+                              type="checkbox"
                               className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
                               checked={scansFilters.categoryL1.includes(cat)}
                               onChange={() => toggleScansCategoryL1(cat)}
@@ -680,14 +598,14 @@ const LocationView = () => {
 
           <div className="space-y-1.5 relative scans-category-dropdown">
             <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">Sub Category</label>
-            <button 
+            <button
               type="button"
               onClick={() => setIsScansCategoryL2DropdownOpen(!isScansCategoryL2DropdownOpen)}
               className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-left flex items-center justify-between"
             >
               <span className="truncate">
-                {scansFilters.categoryL2.includes('All Categories') 
-                  ? 'All Categories' 
+                {scansFilters.categoryL2.includes('All Categories')
+                  ? 'All Categories'
                   : `${scansFilters.categoryL2.length} Selected`}
               </span>
               <ChevronDown className={`text-gray-400 transition-transform ${isScansCategoryL2DropdownOpen ? 'rotate-180' : ''}`} size={16} />
@@ -698,8 +616,8 @@ const LocationView = () => {
                 <div className="p-2 space-y-1">
                   {['All Categories', ...scansSubCategories].map(cat => (
                     <label key={cat} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors">
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500/20 border-gray-300"
                         checked={scansFilters.categoryL2.includes(cat)}
                         onChange={() => toggleScansCategoryL2(cat)}
@@ -717,32 +635,32 @@ const LocationView = () => {
           <div className="flex flex-col gap-2">
             <div className="space-y-1.5">
               <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">From</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none"
                 value={scansFilters.dateFrom}
-                onChange={(e) => setScansFilters({...scansFilters, dateFrom: e.target.value})}
+                onChange={(e) => setScansFilters({ ...scansFilters, dateFrom: e.target.value })}
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-10px uppercase font-bold text-gray-400 tracking-wider">To</label>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs focus:outline-none"
                 value={scansFilters.dateTo}
-                onChange={(e) => setScansFilters({...scansFilters, dateTo: e.target.value})}
+                onChange={(e) => setScansFilters({ ...scansFilters, dateTo: e.target.value })}
               />
             </div>
           </div>
 
           <div className="flex gap-2">
-            <button 
+            <button
               onClick={handleApplyScansFilters}
               className="flex-1 bg-blue-500 text-white font-bold py-2 rounded-xl hover:bg-blue-600 transition-all shadow-sm shadow-blue-200"
             >
               Apply Filter
             </button>
-            <button 
+            <button
               onClick={handleClearScansFilters}
               className="px-4 py-2 bg-white border border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition-all"
             >
@@ -753,12 +671,12 @@ const LocationView = () => {
       </div>
 
       {/* Location Per Item Count Table */}
-      <SectionCard 
-        title="Location Per Item Count" 
-        icon={<MapPin size={20} className="text-purple-500" />} 
+      <SectionCard
+        title="Location Per Item Count"
+        icon={<MapPin size={20} className="text-purple-500" />}
         color="purple"
         headerActions={
-          <button 
+          <button
             onClick={() => {
               const flatRows = itemStats.flatMap(item =>
                 item.locations.map(loc => ({
@@ -790,13 +708,13 @@ const LocationView = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Discrepancy Putaway */}
         <div className="lg:col-span-2">
-          <SectionCard 
-            title="Zero system locations" 
+          <SectionCard
+            title="Zero system locations"
             subtitle="System Qty = 0, Physical > 0"
-            icon={<PackageCheck size={20} className="text-orange-500" />} 
+            icon={<PackageCheck size={20} className="text-orange-500" />}
             color="orange"
             headerActions={
-              <button 
+              <button
                 onClick={() => exportToExcel(discrepancyPutaway, 'putaway_discrepancy')}
                 className="flex items-center gap-2 px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors whitespace-nowrap"
               >
@@ -815,10 +733,10 @@ const LocationView = () => {
             <LocationDonut data={metrics.locationStatus} />
           </SectionCard>
 
-          <SectionCard 
-            title="Top 5 Miss Match Items" 
+          <SectionCard
+            title="Top 5 Miss Match Items"
             subtitle="Most Location Differences"
-            icon={<AlertCircle size={20} className="text-red-500" />} 
+            icon={<AlertCircle size={20} className="text-red-500" />}
             color="red"
           >
             <div className="space-y-4">
@@ -843,36 +761,50 @@ const LocationView = () => {
 
       {/* Scans Detail Table Analysis */}
       <div className="pt-8 border-t border-gray-100 space-y-8">
-        <SectionCard 
-          title="Scans Detail Analysis" 
-          subtitle={`Showing ${filteredScans.length} scan records`}
-          icon={<BarChart3 size={20} className="text-blue-500" />} 
+        <SectionCard
+          title="Scans Detail Analysis"
+          subtitle={`Showing ${paginatedData?.pagination?.total || 0} scan records`}
+          icon={<BarChart3 size={20} className="text-blue-500" />}
           color="blue"
           headerActions={
-            <button 
-              onClick={() => exportToCSV(filteredScans, 'location_scans_report')}
+            <button
+              onClick={() => {
+                // If we need a full export, we'd need a specific endpoint or to fetch all.
+                // For now, we'll alert that it's just the current page or redirect to a full export API.
+                window.open(`${import.meta.env.VITE_API_URL || 'https://inventoryapi.breadfastwh.online'}/api/locations/scans`, '_blank')
+              }}
               className="flex items-center gap-2 px-3 py-1.5 border border-blue-200 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors whitespace-nowrap"
             >
               <FileDown size={16} />
-              Export CSV
+              Full Export
             </button>
           }
         >
-          <ScansTable data={filteredScans} />
+          {isLoadingScans ? (
+            <div className="text-center py-20"><Spinner size="lg" /></div>
+          ) : (
+            <ScansTable 
+               data={paginatedData?.data || []} 
+               manualPagination={true}
+               pageCount={paginatedData?.pagination?.pages || 1}
+               pageIndex={scansPage}
+               onPageChange={setScansPage}
+            />
+          )}
         </SectionCard>
       </div>
 
 
       {/* Location Details Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
+      <Modal
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={`Locations for: ${selectedProduct?.name || ''}`}
         maxWidth="max-w-4xl"
       >
         {selectedProduct && (
           <div className="space-y-6">
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex flex-wrap gap-8 items-center justify-between">
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 flex flex-wrap gap-8 items-center justify-between">
               <div className="space-y-1">
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Location Accuracy</div>
                 <div className="flex items-center gap-4">
@@ -881,7 +813,7 @@ const LocationView = () => {
                   <div className="text-2xl font-black text-red-600">{selectedProduct.missMatchLocs} <span className="text-xs font-bold text-gray-400">MISMATCH</span></div>
                 </div>
               </div>
-              
+
               <div className="space-y-1 text-right">
                 <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Quantity Totals</div>
                 <div className="flex items-center gap-4">

@@ -89,8 +89,9 @@ const AdminPanelPage = () => {
           <select name="role" value={form.role} onChange={handleChange} className="border p-2 rounded">
             {/* <option value="top_admin">Top Admin</option> */}
             <option value="admin">Admin</option>
-            <option value="senior">Senior</option>
             <option value="manager">Manager</option>
+            <option value="shiftLeader">Shift Leader</option>
+            <option value="keeper">Keeper</option>
           </select>
           <button type="submit" className="bg-blue-600 text-white py-2 rounded">{editingId ? 'Update' : 'Create'} User</button>
         </form>
