@@ -6,7 +6,11 @@ dotenv.config();
 import connectDB from "./DB/config/DBconniction.js"
 connectDB();
 
+import passport from 'passport';
+
 const app = express();
+
+app.use(passport.initialize());
 
 const allowedOrigins = [
   'https://inventory.breadfastwh.online',
@@ -45,8 +49,8 @@ app.use('/api', importRoutes);
 app.use('/api', inventoryRoutes);
 app.use('/api', locationRoutes);
 app.use('/api', productivityRoutes);
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api', uniqueInventoryRoutes);
 
 
