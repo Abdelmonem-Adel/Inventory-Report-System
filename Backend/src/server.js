@@ -10,38 +10,47 @@ import passport from 'passport';
 
 const app = express();
 
-app.use(passport.initialize());
+// --- BULLETPROOF CORS START ---
+const isDomainAllowed = (origin) => {
+  if (!origin) return true;
+  const cleanOrigin = origin.replace(/^https?:\/\//, '').replace(/\/$/, '').toLowerCase();
+  return cleanOrigin.endsWith('breadfastwh.online') || 
+         cleanOrigin === 'localhost:3000' || 
+         cleanOrigin === '127.0.0.1:3000';
+};
 
-const allowedOrigins = [
-  'inventory.breadfastwh.online',
-  'www.inventory.breadfastwh.online',
-  'localhost:3000',
-  '127.0.0.1:3000',
-].filter(Boolean);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (isDomainAllowed(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Max-Age', '86400'); // Cache for 24h
+  }
+  
+  // Handle Preflight (OPTIONS) explicitly and early
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  next();
+});
 
+// Also use the cors package as a backup / secondary layer
 app.use(cors({
-  origin: function (origin, callback) {
-    // 1. Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-
-    // 2. Clean origin for comparison (remove protocol and trailing slash)
-    const cleanOrigin = origin.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    
-    // 3. Check against allowed list or environment variable
-    const isAllowed = allowedOrigins.some(ao => cleanOrigin === ao.replace(/^https?:\/\//, '').replace(/\/$/, '')) || (process.env.FRONTEND_URL && cleanOrigin === process.env.FRONTEND_URL.replace(/^https?:\/\//, '').replace(/\/$/, ''));
-
-    if (isAllowed) {
+  origin: (origin, callback) => {
+    if (isDomainAllowed(origin)) {
       callback(null, true);
     } else {
-      console.log(`[CORS] Rejected origin: ${origin} (Cleaned: ${cleanOrigin})`);
+      console.log(`[CORS] Rejected: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 200 // Some legacy browsers crash on 204
+  credentials: true
 }));
+// --- BULLETPROOF CORS END ---
+
+app.use(passport.initialize());
 
 
 import importRoutes from "./routes/importRoutes.js";
