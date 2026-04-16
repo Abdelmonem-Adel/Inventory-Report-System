@@ -21,15 +21,16 @@ const isDomainAllowed = (origin) => {
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (isDomainAllowed(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Max-Age', '86400'); // Cache for 24h
-  }
+  // LOG EVERYTHING FOR DEBUGGING
+  console.log(`[DEBUG] ${new Date().toISOString()} - ${req.method} ${req.url} - Origin: ${origin}`);
   
-  // Handle Preflight (OPTIONS) explicitly and early
+  // ALLOW ALL TEMPORARILY
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -38,17 +39,10 @@ app.use((req, res, next) => {
 
 // Also use the cors package as a backup / secondary layer
 app.use(cors({
-  origin: (origin, callback) => {
-    if (isDomainAllowed(origin)) {
-      callback(null, true);
-    } else {
-      console.log(`[CORS] Rejected: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Reflect request origin
   credentials: true
 }));
-// --- BULLETPROOF CORS END ---
+// --- DEBUG CORS END ---
 
 app.use(passport.initialize());
 
