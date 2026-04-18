@@ -9,7 +9,6 @@ const ImportPage = lazy(() => import('./views/ImportPage.jsx'));
 const LoginPage = lazy(() => import('./views/LoginPage.jsx'));
 
 const AdminPanelPage = lazy(() => import('./views/AdminPanelPage.jsx'));
-const AuthSuccess = lazy(() => import('./views/AuthSuccess.jsx'));
 
 
 
@@ -56,7 +55,6 @@ const App = () => {
               <Route path="/location" element={<ProtectedRoute><LocationView /></ProtectedRoute>} />
               <Route path="/productivity" element={<ProtectedRoute roles={['top_admin', 'admin', 'manager', 'shiftLeader']}><ProductivityView /></ProtectedRoute>} />
               <Route path="/import" element={<ProtectedRoute roles={['top_admin', 'admin']}><ImportPage /></ProtectedRoute>} />
-              <Route path="/auth-success" element={<AuthSuccess />} />
               <Route path="*" element={<Navigate to="/inventory" />} />
             </Routes>
           </Suspense>
