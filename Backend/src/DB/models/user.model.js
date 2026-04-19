@@ -15,11 +15,20 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    required: false // Optional for Google Auth users
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true // Allows multiple users to have null googleId (though email is unique)
+  },
+  picture: {
+    type: String
   },
   role: {
     type: String,
     enum: ['top_admin', 'admin', 'keeper', 'shiftLeader', 'manager'],
+    default: 'keeper',
     required: true
   }
 }, { timestamps: true });

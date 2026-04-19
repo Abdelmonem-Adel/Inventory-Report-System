@@ -50,7 +50,26 @@ const LoginPage = ({ onLogin }) => {
           className="w-full mb-4 p-2 border rounded"
           required
         />
-        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Login</button>
+        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors">Login</button>
+        
+        <div className="flex items-center my-4">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="mx-2 text-gray-500 text-sm">OR</span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        <button 
+          type="button"
+          onClick={() => window.location.href = `${import.meta.env.VITE_API_URL || 'https://inventoryapi.breadfastwh.online'}/auth/google`}
+          className="w-full flex items-center justify-center bg-white border border-gray-300 text-gray-700 py-2 rounded hover:bg-gray-50 transition-colors shadow-sm"
+        >
+          <img 
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+            alt="Google" 
+            className="w-5 h-5 mr-2"
+          />
+          Sign in with Google
+        </button>
       </form>
     </div>
   );

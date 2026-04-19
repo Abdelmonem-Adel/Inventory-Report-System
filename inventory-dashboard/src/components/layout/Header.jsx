@@ -129,6 +129,12 @@ const styles = `
     flex-shrink: 0;
     font-family: 'Poppins', sans-serif;
   }
+  .hdr-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+  }
   .hdr-username {
     font-size: 13px;
     font-weight: 700;
@@ -301,9 +307,9 @@ const BoxIcon = () => (
   </svg>
 );
 
-const Header = () => {
-  const user = JSON.parse(localStorage.getItem('user'));
+const Header = ({ user: userProp }) => {
   const navigate = useNavigate();
+  const user = userProp || JSON.parse(localStorage.getItem('user'));
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -314,10 +320,15 @@ const Header = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await authApi.get('/auth/logout');
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    navigate('/login');
+    window.location.href = '/login';
   };
 
   const isActive = (path) => location.pathname === path;
@@ -363,7 +374,9 @@ const Header = () => {
               <>
                 <div className="hdr-divider" />
                 <div className="hdr-user">
-                  <div className="hdr-avatar">{initial}</div>
+                  <div className="hdr-avatar">
+                    {user.picture ? <img src={user.picture} alt={user.name} /> : initial}
+                  </div>
                   <span className="hdr-username">{user.name}</span>
                   <span className={`hdr-badge ${badgeClass}`}>
                     {user.role.replace('_', ' ')}
@@ -398,7 +411,9 @@ const Header = () => {
         {user && (
           <div className={`hdr-mobile-menu${menuOpen ? ' open' : ''}`}>
             <div className="hdr-mobile-user">
-              <div className="hdr-avatar">{initial}</div>
+              <div className="hdr-avatar">
+                {user.picture ? <img src={user.picture} alt={user.name} /> : initial}
+              </div>
               <div>
                 <div className="hdr-username">{user.name}</div>
                 <span className={`hdr-badge ${badgeClass}`}>{user.role.replace('_', ' ')}</span>

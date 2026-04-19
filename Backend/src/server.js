@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import session from "express-session";
+import passport from "passport";
+import "./config/passport.js";
 dotenv.config();
 
 import connectDB from "./DB/config/DBconniction.js"
@@ -24,6 +27,24 @@ app.use(cors({
   },
   credentials: true
 }));
+
+// Trust proxy for Nginx
+app.set('trust proxy', 1);
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'secret',
+  resave: false,
+  saveUninitialized: false,
+  proxy: true,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax', // 'lax' is generally safer for OAuth
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 import importRoutes from "./routes/importRoutes.js";
