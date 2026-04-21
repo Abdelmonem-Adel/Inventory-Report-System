@@ -154,6 +154,7 @@ const styles = `
   .hdr-badge-top_admin { background: #fef9c3; color: #854d0e; }
   .hdr-badge-admin     { background: #eef2ff; color: #4338ca; }
   .hdr-badge-manager   { background: #f0fdf4; color: #166534; }
+  .hdr-badge-planner   { background: #fdf2f8; color: #9d174d; }
   .hdr-badge-default   { background: #f1f5f9; color: #475569; }
 
   /* Logout */
@@ -282,9 +283,10 @@ const styles = `
 `;
 
 const NAV_ITEMS = [
-  { to: '/inventory',    label: 'Inventory',    roles: null },
-  { to: '/location',     label: 'Location',     roles: null },
+  { to: '/inventory',    label: 'Inventory',    roles: ['top_admin', 'admin', 'manager', 'shiftLeader', 'keeper'] },
+  { to: '/location',     label: 'Location',     roles: ['top_admin', 'admin', 'manager', 'shiftLeader', 'keeper'] },
   { to: '/productivity', label: 'Productivity', roles: ['top_admin', 'admin', 'manager'] },
+  { to: '/manpower',     label: 'Picking Manpower',roles: ['top_admin', 'admin', 'manager', 'shiftLeader', 'planner'] },
   { to: '/import',       label: 'Import',       roles: ['top_admin', 'admin'] },
   { to: '/admin',        label: 'Admin Panel',  roles: ['top_admin', 'admin'] },
 ];
@@ -293,6 +295,7 @@ const ROLE_BADGE = {
   top_admin: 'hdr-badge-top_admin',
   admin:     'hdr-badge-admin',
   manager:   'hdr-badge-manager',
+  planner:   'hdr-badge-planner',
 };
 
 const LogoutIcon = () => (

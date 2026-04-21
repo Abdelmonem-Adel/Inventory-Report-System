@@ -12,4 +12,4 @@ router.post("/import-inventory", upload.single("file"), importInventoryFile);
 router.post("/import-scans", upload.single("file"), importScansFile);
 router.post("/import-unique-inventory", upload.single("file"), importUniqueInventoryFile);
 
-export default router;
+export default router; 

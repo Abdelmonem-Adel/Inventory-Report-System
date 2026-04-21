@@ -38,7 +38,7 @@ export const importInventoryFile = async (req, res) => {
 
     const insertedDocs = await Inventory.insertMany(formattedData, { ordered: false });
 
-    // If formattedData had rows but insertedDocs is empty, it means all rows failed validation
+
     if (formattedData.length > 0 && (!insertedDocs || insertedDocs.length === 0)) {
       throw new Error("Validation failed for all rows. Please check that Excel columns exist and are correctly named.");
     }

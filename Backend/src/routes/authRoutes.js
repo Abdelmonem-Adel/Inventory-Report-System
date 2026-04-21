@@ -3,22 +3,21 @@ const router = express.Router();
 import authController from '../controllers/authController.js';
 import passport from 'passport';
 
-// @desc    Initiate Google OAuth
-// @route   GET /auth/google
+
+// GET /auth/google
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-// @desc    Google OAuth callback
-// @route   GET /auth/google/callback
+
+// GET /auth/google/callback
 router.get('/google/callback', 
   passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL}/login` }),
   (req, res) => {
-    // Successful authentication, redirect to frontend.
+      
     res.redirect(`${process.env.FRONTEND_URL}/inventory`);
   }
 );
 
-// @desc    Get authenticated user data
-// @route   GET /auth/user
+// GET /auth/user
 router.get('/user', (req, res) => {
   if (req.isAuthenticated()) {
     res.json(req.user);
@@ -27,19 +26,18 @@ router.get('/user', (req, res) => {
   }
 });
 
-// @desc    Logout user
-// @route   GET /auth/logout
+// GET /auth/logout
 router.get('/logout', (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
     req.session.destroy(() => {
-      res.clearCookie('connect.sid'); // Default session cookie name
+      res.clearCookie('connect.sid'); 
       res.json({ message: 'Logged out' });
     });
   });
 });
 
-// Existing login route
+// POST /auth/login
 router.post('/login', authController.login);
 
 export default router;

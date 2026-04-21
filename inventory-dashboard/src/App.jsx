@@ -10,6 +10,7 @@ import authApi from './api/authApi';
 const ImportPage = lazy(() => import('./views/ImportPage.jsx'));
 const LoginPage = lazy(() => import('./views/LoginPage.jsx'));
 const AdminPanelPage = lazy(() => import('./views/AdminPanelPage.jsx'));
+const ManpowerCalculator = lazy(() => import('./views/ManpowerCalculator.jsx'));
 
 
 
@@ -39,7 +40,7 @@ function ProtectedRoute({ children, roles, user, loading }) {
   const activeUser = user || JSON.parse(localStorage.getItem('user'));
   
   if (roles && activeUser && !roles.includes(activeUser.role)) {
-    return <Navigate to="/inventory" />;
+    return <Navigate to={activeUser.role === 'planner' ? "/manpower" : "/inventory"} />;
   }
   
   return children;
@@ -69,7 +70,7 @@ const App = () => {
 
   const handleLogin = (userData) => {
     setUser(userData);
-    window.location.href = '/inventory';
+    window.location.href = userData.role === 'planner' ? '/manpower' : '/inventory';
   };
 
   return (
@@ -86,18 +87,23 @@ const App = () => {
                 </ProtectedRoute>
               } />
               <Route path="/inventory" element={
-                <ProtectedRoute user={user} loading={loading}>
+                <ProtectedRoute roles={['top_admin', 'admin', 'manager', 'shiftLeader', 'keeper']} user={user} loading={loading}>
                   <InventoryView />
                 </ProtectedRoute>
               } />
               <Route path="/location" element={
-                <ProtectedRoute user={user} loading={loading}>
+                <ProtectedRoute roles={['top_admin', 'admin', 'manager', 'shiftLeader', 'keeper']} user={user} loading={loading}>
                   <LocationView />
                 </ProtectedRoute>
               } />
               <Route path="/productivity" element={
                 <ProtectedRoute roles={['top_admin', 'admin', 'manager', 'shiftLeader']} user={user} loading={loading}>
                   <ProductivityView />
+                </ProtectedRoute>
+              } />
+              <Route path="/manpower" element={
+                <ProtectedRoute roles={['top_admin', 'admin', 'manager', 'shiftLeader', 'planner']} user={user} loading={loading}>
+                  <ManpowerCalculator />
                 </ProtectedRoute>
               } />
               <Route path="/import" element={

@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: false // Optional for Google Auth users
+    required: false 
   },
   googleId: {
     type: String,
@@ -25,9 +25,9 @@ const userSchema = new mongoose.Schema({
   picture: {
     type: String
   },
-  role: {
+    role: {
     type: String,
-    enum: ['top_admin', 'admin', 'keeper', 'shiftLeader', 'manager'],
+    enum: ['top_admin', 'admin', 'keeper', 'shiftLeader', 'manager', 'planner'],
     default: 'keeper',
     required: true
   }

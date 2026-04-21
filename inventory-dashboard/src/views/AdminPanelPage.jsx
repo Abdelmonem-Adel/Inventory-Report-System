@@ -90,6 +90,7 @@ const AdminPanelPage = () => {
             {/* <option value="top_admin">Top Admin</option> */}
             <option value="admin">Admin</option>
             <option value="manager">Manager</option>
+            <option value="planner">Planner</option>
             <option value="shiftLeader">Shift Leader</option>
             <option value="keeper">Keeper</option>
           </select>

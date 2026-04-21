@@ -37,12 +37,12 @@ passport.use(
         }
 
         // 3. Create new user
-        user = await User.create({
+        user = await User.create({ 
           googleId: id,
           name: displayName,
           email: email,
           picture: picture,
-          role: 'keeper' // Default role
+          role: 'keeper'
         });
 
         done(null, user);

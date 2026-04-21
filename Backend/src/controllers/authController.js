@@ -4,7 +4,6 @@ import User from '../DB/models/user.model.js';
 
 
 // Login Controller
-// Validates input, checks user, compares password, returns JWT
 const authController = {
   login: async (req, res) => {
     try {
