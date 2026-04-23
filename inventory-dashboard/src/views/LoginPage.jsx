@@ -13,7 +13,7 @@ const LoginPage = ({ onLogin }) => {
     if (errorCode === 'not_breadfast') {
       setError('Only @breadfast.com accounts are allowed.');
     } else if (errorCode === 'not_registered') {
-      setError('Your account is not registered. Please contact your Admin.');
+      setError('Your account is not registered. Please contact your Admin (ehab.lotfy@breadfast.com - ).');
     } else if (errorCode === 'server_error') {
       setError('A server error occurred. Please try again later.');
     }
