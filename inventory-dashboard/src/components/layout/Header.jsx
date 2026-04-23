@@ -310,9 +310,8 @@ const BoxIcon = () => (
   </svg>
 );
 
-const Header = ({ user: userProp }) => {
+const Header = ({ user, onLogout }) => {
   const navigate = useNavigate();
-  const user = userProp || JSON.parse(localStorage.getItem('user'));
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -329,8 +328,7 @@ const Header = ({ user: userProp }) => {
     } catch (err) {
       console.error("Logout error:", err);
     }
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    if (onLogout) onLogout(); // clears React state in App
     window.location.href = '/login';
   };
 

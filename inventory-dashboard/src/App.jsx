@@ -73,10 +73,16 @@ const App = () => {
     window.location.href = userData.role === 'planner' ? '/manpower' : '/inventory';
   };
 
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  };
+
   return (
     <Router>
       <div className="min-h-screen pb-12">
-        <Header user={user} />
+        <Header user={user} onLogout={handleLogout} />
         <main className="container mx-auto px-4 mt-8">
           <Suspense fallback={<div>Loading...</div>}>
             <Routes>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import authApi from '../api/authApi';
 
 const LoginPage = ({ onLogin }) => {
@@ -6,11 +6,27 @@ const LoginPage = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  // Read error code from Google OAuth redirect (e.g. ?error=not_registered)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorCode = params.get('error');
+    if (errorCode === 'not_breadfast') {
+      setError('Only @breadfast.com accounts are allowed.');
+    } else if (errorCode === 'not_registered') {
+      setError('Your account is not registered. Please contact your Admin.');
+    } else if (errorCode === 'server_error') {
+      setError('A server error occurred. Please try again later.');
+    }
+    // Clean the URL so the error doesn't stay on refresh
+    if (errorCode) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // Handle login form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    // Basic validation
     if (!email || !password) {
       setError('Email and password required');
       return;
@@ -33,7 +49,21 @@ const LoginPage = ({ onLogin }) => {
     <div className="flex flex-col items-center justify-center ">
       <form onSubmit={handleSubmit} className="bg-white p-8  rounded-2xl shadow-md w-80">
         <h2 className="text-2xl font-bold mb-4 text-center">Login</h2>
-        {error && <div className="mb-2 text-red-500 text-center">{error}</div>}
+
+        {error && (
+          <div className="mb-3 p-3 bg-red-50 border border-red-300 text-red-600 text-sm text-center rounded-lg">
+            {error === 'Your account is not registered. Please contact your Admin.' ? (
+              <>
+                <span className="block font-semibold text-red-700 mb-1">🚫 Access Denied</span>
+                Your account is not registered.<br />
+                Please <span className="font-bold">Contact Admin</span> to get access.
+              </>
+            ) : (
+              error
+            )}
+          </div>
+        )}
+
         <input
           type="email"
           placeholder="Email"

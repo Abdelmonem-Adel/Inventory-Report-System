@@ -19,16 +19,19 @@ passport.use(
         const email = emails[0].value;
         const picture = photos[0].value;
 
-        // 1. Check if user with this googleId exists
-        let user = await User.findOne({ googleId: id });
+        // 1. Only allow @breadfast.com emails
+        if (!email.endsWith('@breadfast.com')) {
+          return done(null, false, { message: 'not_breadfast' });
+        }
 
+        // 2. Check if user with this googleId exists
+        let user = await User.findOne({ googleId: id });
         if (user) {
           return done(null, user);
         }
 
-        // 2. If not, check if user with this email exists (Link existing email accounts)
+        // 3. Check if user with this email exists in DB (link Google account)
         user = await User.findOne({ email });
-
         if (user) {
           user.googleId = id;
           if (!user.picture) user.picture = picture;
@@ -36,16 +39,9 @@ passport.use(
           return done(null, user);
         }
 
-        // 3. Create new user
-        user = await User.create({ 
-          googleId: id,
-          name: displayName,
-          email: email,
-          picture: picture,
-          role: 'keeper'
-        });
+        // 4. User NOT found in DB → contact admin (no auto-creation)
+        return done(null, false, { message: 'not_registered' });
 
-        done(null, user);
       } catch (err) {
         done(err, null);
       }

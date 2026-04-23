@@ -9,11 +9,24 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 
 
 // GET /auth/google/callback
-router.get('/google/callback', 
-  passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL}/login` }),
-  (req, res) => {
-      
-    res.redirect(`${process.env.FRONTEND_URL}/inventory`);
+router.get('/google/callback',
+  (req, res, next) => {
+    passport.authenticate('google', (err, user, info) => {
+      if (err) {
+        return res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
+      }
+      if (!user) {
+        // Pass the specific reason: not_breadfast | not_registered
+        const reason = info?.message || 'unknown';
+        return res.redirect(`${process.env.FRONTEND_URL}/login?error=${reason}`);
+      }
+      req.logIn(user, (loginErr) => {
+        if (loginErr) {
+          return res.redirect(`${process.env.FRONTEND_URL}/login?error=server_error`);
+        }
+        return res.redirect(`${process.env.FRONTEND_URL}/inventory`);
+      });
+    })(req, res, next);
   }
 );
 
