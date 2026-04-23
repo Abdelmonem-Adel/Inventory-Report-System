@@ -37,8 +37,8 @@ app.use(session({
   saveUninitialized: false,
   proxy: true,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax', // 'lax' is generally safer for OAuth
+    secure: process.env.NODE_ENV === 'production' || process.env.FRONTEND_URL.includes('https'), 
+    sameSite: process.env.NODE_ENV === 'production' || process.env.FRONTEND_URL.includes('https') ? 'none' : 'lax',
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
