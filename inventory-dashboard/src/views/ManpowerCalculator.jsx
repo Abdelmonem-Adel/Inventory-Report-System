@@ -151,11 +151,11 @@ const ManpowerCalculator = () => {
                   <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider">Available Pickers</th>
                   <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider">Rate/Hr</th>
                   <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider text-center">Rate/Day</th>
-                  <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider bg-yellow-50/40 text-yellow-700 text-center">QTY Needed</th>
+                  <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider bg-yellow-50/40 text-yellow-700 text-center">QTY Needed/Day</th>
                   <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider bg-green-50/40 text-green-700 text-center">Manpower</th>
                   <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider bg-indigo-50/40 text-indigo-700 text-center">Manpower Needed</th>
                   <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider bg-yellow-50/40 text-yellow-700 text-center">Manpower Input</th>
-                  <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider bg-green-50/40 text-green-700 text-center">QTY Picked</th>
+                  <th className="px-6 py-4 text-[10px] uppercase font-bold text-gray-400 tracking-wider bg-green-50/40 text-green-700 text-center">QTY Picked/Day</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
