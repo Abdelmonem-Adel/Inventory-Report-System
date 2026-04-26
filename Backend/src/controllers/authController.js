@@ -26,7 +26,7 @@ const authController = {
       const token = jwt.sign(
         { userId: user._id, role: user.role },
         process.env.JWT_SECRET || 'supersecret',
-        { expiresIn: '8h' }
+        { expiresIn: '30d' }
       );
       res.json({ token, user: { name: user.name, email: user.email, role: user.role } });
     } catch (err) {

@@ -322,6 +322,10 @@ const Header = ({ user, onLogout }) => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  if (location.pathname === '/login') {
+    return null;
+  }
+
   const handleLogout = async () => {
     try {
       await authApi.get('/auth/logout');
