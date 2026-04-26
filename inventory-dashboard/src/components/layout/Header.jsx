@@ -323,7 +323,25 @@ const Header = ({ user, onLogout }) => {
   }, []);
 
   if (location.pathname === '/login') {
-    return null;
+    return (
+      <>
+        <style>{styles}</style>
+        <header className="hdr">
+          <div className="hdr-logo">
+            <div className="hdr-logo-icon">
+              <BoxIcon />
+            </div>
+            <div className="hdr-logo-text">
+              <span className="hdr-logo-name">SORMAG</span>
+              <span className="hdr-logo-sub">INVENTORY ANALYSIS</span>
+            </div>
+          </div>
+          <div className="hdr-right">
+            <Link to="/login" className="hdr-login">Login</Link>
+          </div>
+        </header>
+      </>
+    );
   }
 
   const handleLogout = async () => {
