@@ -280,15 +280,102 @@ const styles = `
     .hdr-login { display: none; }
     .hdr-mobile-btn { display: block; }
   }
+
+  /* Dropdown Styles */
+  .hdr-nav-item {
+    position: relative;
+    height: 64px;
+    display: flex;
+    align-items: center;
+  }
+  .hdr-nav-dropdown {
+    position: absolute;
+    top: 55px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    min-width: 200px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 50;
+  }
+  .hdr-nav-item:hover .hdr-nav-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+  .hdr-nav-group-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    user-select: none;
+  }
+  .hdr-nav-group-label:hover {
+    background: #f8fafc;
+    color: #1a202c;
+  }
+  .hdr-nav-group-label.active {
+    color: #4f46e5;
+    background: #f5f7ff;
+  }
+  .hdr-nav-group-label svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s;
+    opacity: 0.7;
+  }
+  .hdr-nav-item:hover .hdr-nav-group-label svg {
+    transform: rotate(180deg);
+  }
+
+  /* Mobile Section Styles */
+  .hdr-mobile-section {
+    margin-bottom: 4px;
+  }
+  .hdr-mobile-group-label {
+    padding: 12px 12px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
 `;
 
-const NAV_ITEMS = [
-  { to: '/inventory',    label: 'Inventory',    roles: ['top_admin', 'admin', 'manager', 'shiftLeader', 'keeper'] },
-  { to: '/location',     label: 'Location',     roles: ['top_admin', 'admin', 'manager', 'shiftLeader', 'keeper'] },
-  { to: '/productivity', label: 'Productivity', roles: ['top_admin', 'admin', 'manager'] },
-  { to: '/manpower',     label: 'Picking Manpower',roles: ['top_admin', 'admin', 'manager', 'shiftLeader', 'planner'] },
-  { to: '/import',       label: 'Import',       roles: ['top_admin', 'admin'] },
-  { to: '/admin',        label: 'Admin Panel',  roles: ['top_admin', 'admin'] },
+const NAV_GROUPS = [
+  {
+    label: 'Cycel Count',
+    items: [
+      { to: '/inventory',    label: 'Inventory',    roles: ['top_admin', 'admin', 'manager', 'shiftLeader', 'keeper'] },
+      { to: '/location',     label: 'Location',     roles: ['top_admin', 'admin', 'manager', 'shiftLeader', 'keeper'] },
+      { to: '/productivity', label: 'Productivity', roles: ['top_admin', 'admin', 'manager'] },
+    ]
+  },
+  {
+    label: 'Planning',
+    items: [
+      { to: '/manpower',     label: 'Picking Manpower', roles: ['top_admin', 'admin', 'manager', 'shiftLeader', 'planner'] },
+    ]
+  },
+  {
+    label: 'Admin',
+    items: [
+      { to: '/import',       label: 'Import',       roles: ['top_admin', 'admin'] },
+      { to: '/admin',        label: 'Admin Panel',  roles: ['top_admin', 'admin'] },
+    ]
+  }
 ];
 
 const ROLE_BADGE = {
@@ -337,10 +424,12 @@ const Header = ({ user, onLogout }) => {
   };
 
   const isActive = (path) => location.pathname === path;
+  const isGroupActive = (items) => items.some(item => isActive(item.to));
 
-  const visibleLinks = NAV_ITEMS.filter(
-    ({ roles }) => !roles || (user && roles.includes(user.role))
-  );
+  const visibleGroups = NAV_GROUPS.map(group => ({
+    ...group,
+    items: group.items.filter(({ roles }) => !roles || (user && roles.includes(user.role)))
+  })).filter(group => group.items.length > 0);
 
   const badgeClass = user ? (ROLE_BADGE[user.role] || 'hdr-badge-default') : '';
   const initial = user?.name?.charAt(0).toUpperCase() || '?';
@@ -361,15 +450,27 @@ const Header = ({ user, onLogout }) => {
 
           {user && (
             <nav className="hdr-nav">
-              {visibleLinks.map(({ to, label }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className={`hdr-nav-link${isActive(to) ? ' active' : ''}`}
-                >
-                  <span className="hdr-nav-dot" />
-                  {label}
-                </Link>
+              {visibleGroups.map((group) => (
+                <div key={group.label} className="hdr-nav-item">
+                  <div className={`hdr-nav-group-label${isGroupActive(group.items) ? ' active' : ''}`}>
+                    {group.label}
+                    <svg viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="hdr-nav-dropdown">
+                    {group.items.map(({ to, label }) => (
+                      <Link
+                        key={to}
+                        to={to}
+                        className={`hdr-nav-link${isActive(to) ? ' active' : ''}`}
+                      >
+                        <span className="hdr-nav-dot" />
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               ))}
             </nav>
           )}
@@ -425,15 +526,20 @@ const Header = ({ user, onLogout }) => {
               </div>
             </div>
             <div className="hdr-mobile-divider" />
-            {visibleLinks.map(({ to, label }) => (
-              <Link
-                key={to}
-                to={to}
-                className={`hdr-mobile-link${isActive(to) ? ' active' : ''}`}
-                onClick={() => setMenuOpen(false)}
-              >
-                {label}
-              </Link>
+            {visibleGroups.map((group) => (
+              <div key={group.label} className="hdr-mobile-section">
+                <div className="hdr-mobile-group-label">{group.label}</div>
+                {group.items.map(({ to, label }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    className={`hdr-mobile-link${isActive(to) ? ' active' : ''}`}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </div>
             ))}
             <div className="hdr-mobile-divider" />
             <button onClick={handleLogout} className="hdr-mobile-logout">
