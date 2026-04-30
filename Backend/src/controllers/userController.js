@@ -2,8 +2,7 @@ import bcrypt from 'bcrypt';
 import User from '../DB/models/user.model.js';
 
 const userController = {
-  // List all users (protected)
-  // Returns all users except passwords
+  
   getUsers: async (req, res) => {
     try {
       const users = await User.find({}, '-password');
@@ -14,7 +13,6 @@ const userController = {
   },
 
   // Create user (Admin & Top Admin)
-  // Validates input, checks for duplicate, hashes password
   createUser: async (req, res) => {
     try {
       const { name, email, password, role } = req.body;
@@ -44,7 +42,6 @@ const userController = {
   },
 
   // Edit user (Top Admin only)
-  // Validates input, updates user fields
   editUser: async (req, res) => {
     try {
       const { id } = req.params;
@@ -67,8 +64,7 @@ const userController = {
     }
   },
 
-  // Delete user (Top Admin only)
-  // Deletes user by ID
+  // Delete user (Top Admin only)  
   deleteUser: async (req, res) => {
     try {
       const { id } = req.params;
