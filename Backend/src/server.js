@@ -15,9 +15,9 @@ const allowedOrigins = [
   'https://inventory.breadfastwh.online',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
+  'http://127.0.0.1:27017',
   'https://inventoryapi.breadfastwh.online',
-  'http://inventoryapi.breadfastwh.online',
-  
+  'http://localhost:5000',
 ];
 
 app.use(cors({
@@ -25,7 +25,7 @@ app.use(cors({
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(null, false); // Return false instead of an Error to prevent 500 status codes
     }
   },
   credentials: true
