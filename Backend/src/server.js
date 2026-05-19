@@ -14,7 +14,8 @@ const app = express();
 const allowedOrigins = [
   'https://inventory.breadfastwh.online',
   'http://localhost:3000',
-  'http://127.0.0.1:3000'
+  'http://127.0.0.1:3000',
+  'https://inventoryapi.breadfastwh.online'
 ];
 
 app.use(cors({
@@ -50,7 +51,6 @@ app.use(passport.session());
 import importRoutes from "./routes/importRoutes.js";
 import inventoryRoutes from "./routes/inventoryRoutes.js";
 import locationRoutes from "./routes/LocationRoutes.js";
-import productivityRoutes from "./routes/productivityRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import uniqueInventoryRoutes from "./routes/uniqueInventoryRoutes.js";
@@ -65,7 +65,6 @@ app.use(express.json());
 app.use('/api', importRoutes);
 app.use('/api', inventoryRoutes);
 app.use('/api', locationRoutes);
-app.use('/api', productivityRoutes);
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/api', uniqueInventoryRoutes);
