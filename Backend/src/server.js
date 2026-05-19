@@ -15,7 +15,9 @@ const allowedOrigins = [
   'https://inventory.breadfastwh.online',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
-  'https://inventoryapi.breadfastwh.online'
+  'https://inventoryapi.breadfastwh.online',
+  'http://inventoryapi.breadfastwh.online',
+  
 ];
 
 app.use(cors({
